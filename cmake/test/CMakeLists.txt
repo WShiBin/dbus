@@ -115,7 +115,7 @@ if(DBUS_WITH_GLIB)
     add_helper_executable(manual-test-thread-blocking ${CMAKE_SOURCE_DIR}/../test/thread-blocking.c ${TEST_LIBRARIES})
 endif()
 
-### keep these in creation order, i.e. uppermost dirs first 
+### keep these in creation order, i.e. uppermost dirs first
 set (TESTDIRS
     test/data
     test/data/valid-messages
@@ -148,7 +148,7 @@ FOREACH(DIR ${TESTDIRS})
     FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${DIR})
 ENDFOREACH(DIR)
 
-### copy tests to builddir so that generated tests and static tests 
+### copy tests to builddir so that generated tests and static tests
 ### are all in one place.
 MESSAGE(STATUS "Copying test files to test directory")
 FOREACH(FILE_TYPE *.message *.message-raw *.auth-script *.sha1 *.txt *.conf *.service)

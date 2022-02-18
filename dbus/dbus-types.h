@@ -4,7 +4,7 @@
  * Copyright (C) 2002  Red Hat Inc.
  *
  * Licensed under the Academic Free License version 2.1
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,13 +14,13 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-#if !defined (DBUS_INSIDE_DBUS_H) && !defined (DBUS_COMPILATION)
+#if !defined(DBUS_INSIDE_DBUS_H) && !defined(DBUS_COMPILATION)
 #error "Only <dbus/dbus.h> can be included directly, this file may disappear or change contents."
 #endif
 
@@ -30,9 +30,9 @@
 #include <stddef.h>
 #include <dbus/dbus-arch-deps.h>
 
-typedef dbus_uint32_t  dbus_unichar_t;
+typedef dbus_uint32_t dbus_unichar_t;
 /* boolean size must be fixed at 4 bytes due to wire protocol! */
-typedef dbus_uint32_t  dbus_bool_t;
+typedef dbus_uint32_t dbus_bool_t;
 
 /* Normally docs are in .c files, but there isn't a .c file for this. */
 /**
@@ -74,7 +74,6 @@ typedef dbus_uint32_t  dbus_bool_t;
  *
  * A 16-bit signed integer on all platforms.
  */
-
 
 /**
  * @typedef dbus_uint64_t
@@ -118,10 +117,9 @@ typedef dbus_uint32_t  dbus_bool_t;
  * An 8-byte struct you could use to access int64 without having
  * int64 support. Use #dbus_int64_t or #dbus_uint64_t instead.
  */
-typedef struct
-{
-  dbus_uint32_t first32;  /**< first 32 bits in the 8 bytes (beware endian issues) */
-  dbus_uint32_t second32; /**< second 32 bits in the 8 bytes (beware endian issues) */
+typedef struct {
+    dbus_uint32_t first32;  /**< first 32 bits in the 8 bytes (beware endian issues) */
+    dbus_uint32_t second32; /**< second 32 bits in the 8 bytes (beware endian issues) */
 } DBus8ByteStruct;
 
 /**
@@ -134,21 +132,20 @@ typedef struct
  * instance), so on future platforms it could conceivably be larger
  * than 8 bytes.
  */
-typedef union
-{
-  unsigned char bytes[8]; /**< as 8 individual bytes */
-  dbus_int16_t  i16;   /**< as int16 */
-  dbus_uint16_t u16;   /**< as int16 */
-  dbus_int32_t  i32;   /**< as int32 */
-  dbus_uint32_t u32;   /**< as int32 */
-  dbus_bool_t   bool_val; /**< as boolean */
-  dbus_int64_t  i64;   /**< as int64 */
-  dbus_uint64_t u64;   /**< as int64 */
-  DBus8ByteStruct eight; /**< as 8-byte struct */
-  double dbl;          /**< as double */
-  unsigned char byt;   /**< as byte */
-  char *str;           /**< as char* (string, object path or signature) */
-  int fd;              /**< as Unix file descriptor */
+typedef union {
+    unsigned char   bytes[8]; /**< as 8 individual bytes */
+    dbus_int16_t    i16;      /**< as int16 */
+    dbus_uint16_t   u16;      /**< as int16 */
+    dbus_int32_t    i32;      /**< as int32 */
+    dbus_uint32_t   u32;      /**< as int32 */
+    dbus_bool_t     bool_val; /**< as boolean */
+    dbus_int64_t    i64;      /**< as int64 */
+    dbus_uint64_t   u64;      /**< as int64 */
+    DBus8ByteStruct eight;    /**< as 8-byte struct */
+    double          dbl;      /**< as double */
+    unsigned char   byt;      /**< as byte */
+    char*           str;      /**< as char* (string, object path or signature) */
+    int             fd;       /**< as Unix file descriptor */
 } DBusBasicValue;
 
 /** @} */

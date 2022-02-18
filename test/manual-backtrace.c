@@ -28,35 +28,24 @@
 
 #include <stdio.h>
 
-static void
-test2 (void)
-{
-  _dbus_print_backtrace();
+static void test2(void) {
+    _dbus_print_backtrace();
 }
 
-static void
-test1 (void)
-{
-  test2();
+static void test1(void) {
+    test2();
 }
 
-static void
-test (void)
-{
-  test1();
+static void test(void) {
+    test1();
 }
 
-int
-main (int argc, char **argv)
-{
-  if (argc == 2)
-    {
-      fprintf(stderr, "dbus_abort test\n");
-      _dbus_abort ();
+int main(int argc, char** argv) {
+    if (argc == 2) {
+        fprintf(stderr, "dbus_abort test\n");
+        _dbus_abort();
+    } else {
+        test();
     }
-  else
-    {
-      test();
-    }
-  return 0;
+    return 0;
 }

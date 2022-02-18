@@ -33,40 +33,30 @@ DBUS_BEGIN_DECLS
 
 typedef struct DBusNonceFile DBusNonceFile;
 
-struct DBusNonceFile
-{
-  DBusString path;
-  DBusString dir;
+struct DBusNonceFile {
+    DBusString path;
+    DBusString dir;
 };
 
 // server
 
-dbus_bool_t _dbus_noncefile_create (DBusNonceFile *noncefile,
-                                    DBusError *error);
+dbus_bool_t _dbus_noncefile_create(DBusNonceFile* noncefile, DBusError* error);
 
-dbus_bool_t _dbus_noncefile_delete (DBusNonceFile *noncefile,
-                                    DBusError *error);
+dbus_bool_t _dbus_noncefile_delete(DBusNonceFile* noncefile, DBusError* error);
 
-dbus_bool_t _dbus_noncefile_check_nonce (DBusSocket fd,
-                                         const DBusNonceFile *noncefile,
-                                         DBusError *error);
+dbus_bool_t _dbus_noncefile_check_nonce(DBusSocket fd, const DBusNonceFile* noncefile, DBusError* error);
 
-const DBusString* _dbus_noncefile_get_path (const DBusNonceFile *noncefile);
+const DBusString* _dbus_noncefile_get_path(const DBusNonceFile* noncefile);
 
-DBusSocket _dbus_accept_with_noncefile(DBusSocket listen_fd,
-                                 const DBusNonceFile *noncefile);
+DBusSocket _dbus_accept_with_noncefile(DBusSocket listen_fd, const DBusNonceFile* noncefile);
 
 // shared
 
-dbus_bool_t _dbus_read_nonce (const DBusString *fname,
-                              DBusString *nonce,
-                              DBusError *error);
+dbus_bool_t _dbus_read_nonce(const DBusString* fname, DBusString* nonce, DBusError* error);
 
 // client
 
-dbus_bool_t _dbus_send_nonce (DBusSocket fd,
-                              const DBusString *noncefile,
-                              DBusError *error);
+dbus_bool_t _dbus_send_nonce(DBusSocket fd, const DBusString* noncefile, DBusError* error);
 
 DBUS_END_DECLS
 

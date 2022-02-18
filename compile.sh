@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# show compile details
+# -DCMAKE_VERBOSE_MAKEFILE=ON \
+# -DDBUS_DISABLE_ASSERT=ON \
+
+cmake -S cmake -B build \
+    -DDBUS_ENABLE_DOXYGEN_DOCS=OFF \
+    -DDBUS_ENABLE_XML_DOCS=OFF \
+    -DDBUS_ENABLE_VERBOSE_MODE=ON \
+    -DDBUS_ENABLE_STATS=ON \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j 8

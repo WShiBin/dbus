@@ -50,37 +50,30 @@
  * @param error error return
  * @returns #TRUE if path is valid
  */
-dbus_bool_t
-dbus_validate_path (const char       *path,
-                    DBusError        *error)
-{
-  DBusString str;
-  int len;
+dbus_bool_t dbus_validate_path(const char* path, DBusError* error) {
+    DBusString str;
+    int        len;
 
-  _dbus_return_val_if_fail (path != NULL, FALSE);
+    _dbus_return_val_if_fail(path != NULL, FALSE);
 
-  _dbus_string_init_const (&str, path);
-  len = _dbus_string_get_length (&str);
+    _dbus_string_init_const(&str, path);
+    len = _dbus_string_get_length(&str);
 
-  /* In general, it ought to be valid... */
-  if (_DBUS_LIKELY (_dbus_validate_path (&str, 0, len)))
-    return TRUE;
+    /* In general, it ought to be valid... */
+    if (_DBUS_LIKELY(_dbus_validate_path(&str, 0, len))) return TRUE;
 
-  /* slow path: string is invalid, find out why */
+    /* slow path: string is invalid, find out why */
 
-  if (!_dbus_string_validate_utf8 (&str, 0, len))
-    {
-      /* don't quote the actual string here, since a DBusError also needs to
-       * be valid UTF-8 */
-      dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                      "Object path was not valid UTF-8");
-      return FALSE;
+    if (!_dbus_string_validate_utf8(&str, 0, len)) {
+        /* don't quote the actual string here, since a DBusError also needs to
+         * be valid UTF-8 */
+        dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Object path was not valid UTF-8");
+        return FALSE;
     }
 
-  /* FIXME: later, diagnose exactly how it was invalid */
-  dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                  "Object path was not valid: '%s'", path);
-  return FALSE;
+    /* FIXME: later, diagnose exactly how it was invalid */
+    dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Object path was not valid: '%s'", path);
+    return FALSE;
 }
 
 /**
@@ -97,37 +90,30 @@ dbus_validate_path (const char       *path,
  * @param error error return
  * @returns #TRUE if name is valid
  */
-dbus_bool_t
-dbus_validate_interface (const char       *name,
-                         DBusError        *error)
-{
-  DBusString str;
-  int len;
+dbus_bool_t dbus_validate_interface(const char* name, DBusError* error) {
+    DBusString str;
+    int        len;
 
-  _dbus_return_val_if_fail (name != NULL, FALSE);
+    _dbus_return_val_if_fail(name != NULL, FALSE);
 
-  _dbus_string_init_const (&str, name);
-  len = _dbus_string_get_length (&str);
+    _dbus_string_init_const(&str, name);
+    len = _dbus_string_get_length(&str);
 
-  /* In general, it ought to be valid... */
-  if (_DBUS_LIKELY (_dbus_validate_interface (&str, 0, len)))
-    return TRUE;
+    /* In general, it ought to be valid... */
+    if (_DBUS_LIKELY(_dbus_validate_interface(&str, 0, len))) return TRUE;
 
-  /* slow path: string is invalid, find out why */
+    /* slow path: string is invalid, find out why */
 
-  if (!_dbus_string_validate_utf8 (&str, 0, len))
-    {
-      /* don't quote the actual string here, since a DBusError also needs to
-       * be valid UTF-8 */
-      dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                      "Interface name was not valid UTF-8");
-      return FALSE;
+    if (!_dbus_string_validate_utf8(&str, 0, len)) {
+        /* don't quote the actual string here, since a DBusError also needs to
+         * be valid UTF-8 */
+        dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Interface name was not valid UTF-8");
+        return FALSE;
     }
 
-  /* FIXME: later, diagnose exactly how it was invalid */
-  dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                  "Interface name was not valid: '%s'", name);
-  return FALSE;
+    /* FIXME: later, diagnose exactly how it was invalid */
+    dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Interface name was not valid: '%s'", name);
+    return FALSE;
 }
 
 /**
@@ -144,37 +130,30 @@ dbus_validate_interface (const char       *name,
  * @param error error return
  * @returns #TRUE if name is valid
  */
-dbus_bool_t
-dbus_validate_member (const char       *name,
-                      DBusError        *error)
-{
-  DBusString str;
-  int len;
+dbus_bool_t dbus_validate_member(const char* name, DBusError* error) {
+    DBusString str;
+    int        len;
 
-  _dbus_return_val_if_fail (name != NULL, FALSE);
+    _dbus_return_val_if_fail(name != NULL, FALSE);
 
-  _dbus_string_init_const (&str, name);
-  len = _dbus_string_get_length (&str);
+    _dbus_string_init_const(&str, name);
+    len = _dbus_string_get_length(&str);
 
-  /* In general, it ought to be valid... */
-  if (_DBUS_LIKELY (_dbus_validate_member (&str, 0, len)))
-    return TRUE;
+    /* In general, it ought to be valid... */
+    if (_DBUS_LIKELY(_dbus_validate_member(&str, 0, len))) return TRUE;
 
-  /* slow path: string is invalid, find out why */
+    /* slow path: string is invalid, find out why */
 
-  if (!_dbus_string_validate_utf8 (&str, 0, len))
-    {
-      /* don't quote the actual string here, since a DBusError also needs to
-       * be valid UTF-8 */
-      dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                      "Member name was not valid UTF-8");
-      return FALSE;
+    if (!_dbus_string_validate_utf8(&str, 0, len)) {
+        /* don't quote the actual string here, since a DBusError also needs to
+         * be valid UTF-8 */
+        dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Member name was not valid UTF-8");
+        return FALSE;
     }
 
-  /* FIXME: later, diagnose exactly how it was invalid */
-  dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                  "Member name was not valid: '%s'", name);
-  return FALSE;
+    /* FIXME: later, diagnose exactly how it was invalid */
+    dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Member name was not valid: '%s'", name);
+    return FALSE;
 }
 
 /**
@@ -191,37 +170,30 @@ dbus_validate_member (const char       *name,
  * @param error error return
  * @returns #TRUE if name is valid
  */
-dbus_bool_t
-dbus_validate_error_name (const char       *name,
-                          DBusError        *error)
-{
-  DBusString str;
-  int len;
+dbus_bool_t dbus_validate_error_name(const char* name, DBusError* error) {
+    DBusString str;
+    int        len;
 
-  _dbus_return_val_if_fail (name != NULL, FALSE);
+    _dbus_return_val_if_fail(name != NULL, FALSE);
 
-  _dbus_string_init_const (&str, name);
-  len = _dbus_string_get_length (&str);
+    _dbus_string_init_const(&str, name);
+    len = _dbus_string_get_length(&str);
 
-  /* In general, it ought to be valid... */
-  if (_DBUS_LIKELY (_dbus_validate_error_name (&str, 0, len)))
-    return TRUE;
+    /* In general, it ought to be valid... */
+    if (_DBUS_LIKELY(_dbus_validate_error_name(&str, 0, len))) return TRUE;
 
-  /* slow path: string is invalid, find out why */
+    /* slow path: string is invalid, find out why */
 
-  if (!_dbus_string_validate_utf8 (&str, 0, len))
-    {
-      /* don't quote the actual string here, since a DBusError also needs to
-       * be valid UTF-8 */
-      dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                      "Error name was not valid UTF-8");
-      return FALSE;
+    if (!_dbus_string_validate_utf8(&str, 0, len)) {
+        /* don't quote the actual string here, since a DBusError also needs to
+         * be valid UTF-8 */
+        dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Error name was not valid UTF-8");
+        return FALSE;
     }
 
-  /* FIXME: later, diagnose exactly how it was invalid */
-  dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                  "Error name was not valid: '%s'", name);
-  return FALSE;
+    /* FIXME: later, diagnose exactly how it was invalid */
+    dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Error name was not valid: '%s'", name);
+    return FALSE;
 }
 
 /**
@@ -238,37 +210,30 @@ dbus_validate_error_name (const char       *name,
  * @param error error return
  * @returns #TRUE if name is valid
  */
-dbus_bool_t
-dbus_validate_bus_name (const char       *name,
-                        DBusError        *error)
-{
-  DBusString str;
-  int len;
+dbus_bool_t dbus_validate_bus_name(const char* name, DBusError* error) {
+    DBusString str;
+    int        len;
 
-  _dbus_return_val_if_fail (name != NULL, FALSE);
+    _dbus_return_val_if_fail(name != NULL, FALSE);
 
-  _dbus_string_init_const (&str, name);
-  len = _dbus_string_get_length (&str);
+    _dbus_string_init_const(&str, name);
+    len = _dbus_string_get_length(&str);
 
-  /* In general, it ought to be valid... */
-  if (_DBUS_LIKELY (_dbus_validate_bus_name (&str, 0, len)))
-    return TRUE;
+    /* In general, it ought to be valid... */
+    if (_DBUS_LIKELY(_dbus_validate_bus_name(&str, 0, len))) return TRUE;
 
-  /* slow path: string is invalid, find out why */
+    /* slow path: string is invalid, find out why */
 
-  if (!_dbus_string_validate_utf8 (&str, 0, len))
-    {
-      /* don't quote the actual string here, since a DBusError also needs to
-       * be valid UTF-8 */
-      dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                      "Bus name was not valid UTF-8");
-      return FALSE;
+    if (!_dbus_string_validate_utf8(&str, 0, len)) {
+        /* don't quote the actual string here, since a DBusError also needs to
+         * be valid UTF-8 */
+        dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Bus name was not valid UTF-8");
+        return FALSE;
     }
 
-  /* FIXME: later, diagnose exactly how it was invalid */
-  dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                  "Bus name was not valid: '%s'", name);
-  return FALSE;
+    /* FIXME: later, diagnose exactly how it was invalid */
+    dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "Bus name was not valid: '%s'", name);
+    return FALSE;
 }
 
 /**
@@ -285,25 +250,19 @@ dbus_validate_bus_name (const char       *name,
  * @param error error return
  * @returns #TRUE if alleged_utf8 is valid UTF-8
  */
-dbus_bool_t
-dbus_validate_utf8 (const char       *alleged_utf8,
-                    DBusError        *error)
-{
-  DBusString str;
+dbus_bool_t dbus_validate_utf8(const char* alleged_utf8, DBusError* error) {
+    DBusString str;
 
-  _dbus_return_val_if_fail (alleged_utf8 != NULL, FALSE);
+    _dbus_return_val_if_fail(alleged_utf8 != NULL, FALSE);
 
-  _dbus_string_init_const (&str, alleged_utf8);
+    _dbus_string_init_const(&str, alleged_utf8);
 
-  if (_DBUS_LIKELY (_dbus_string_validate_utf8 (&str, 0,
-                                                _dbus_string_get_length (&str))))
-    return TRUE;
+    if (_DBUS_LIKELY(_dbus_string_validate_utf8(&str, 0, _dbus_string_get_length(&str)))) return TRUE;
 
-  /* don't quote the actual string here, since a DBusError also needs to
-   * be valid UTF-8 */
-  dbus_set_error (error, DBUS_ERROR_INVALID_ARGS,
-                  "String was not valid UTF-8");
-  return FALSE;
+    /* don't quote the actual string here, since a DBusError also needs to
+     * be valid UTF-8 */
+    dbus_set_error(error, DBUS_ERROR_INVALID_ARGS, "String was not valid UTF-8");
+    return FALSE;
 }
 
 /** @} */ /* end of group */

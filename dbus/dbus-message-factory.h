@@ -4,7 +4,7 @@
  * Copyright (C) 2005 Red Hat Inc.
  *
  * Licensed under the Academic Free License version 2.1
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,7 +14,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,27 +32,23 @@
 
 DBUS_BEGIN_DECLS
 
-typedef struct
-{
-  DBusValidity expected_validity;
-  
-  DBusString data;
+typedef struct {
+    DBusValidity expected_validity;
+
+    DBusString data;
 
 } DBusMessageData;
 
 #define _DBUS_MESSAGE_DATA_MAX_NESTING 10
-typedef struct
-{
-  int sequence_nos[_DBUS_MESSAGE_DATA_MAX_NESTING];
-  int depth;
-  int count;
+typedef struct {
+    int sequence_nos[_DBUS_MESSAGE_DATA_MAX_NESTING];
+    int depth;
+    int count;
 } DBusMessageDataIter;
 
-void        _dbus_message_data_free              (DBusMessageData     *data);
-void        _dbus_message_data_iter_init         (DBusMessageDataIter *iter);
-dbus_bool_t _dbus_message_data_iter_get_and_next (DBusMessageDataIter *iter,
-                                                  DBusMessageData     *data);
-
+void        _dbus_message_data_free(DBusMessageData* data);
+void        _dbus_message_data_iter_init(DBusMessageDataIter* iter);
+dbus_bool_t _dbus_message_data_iter_get_and_next(DBusMessageDataIter* iter, DBusMessageData* data);
 
 DBUS_END_DECLS
 

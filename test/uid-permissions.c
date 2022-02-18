@@ -32,243 +32,177 @@
 typedef struct {
     gboolean skip;
 
-    TestMainContext *ctx;
+    TestMainContext* ctx;
 
     DBusError e;
-    GError *ge;
+    GError*   ge;
 
     GPid daemon_pid;
 
-    DBusConnection *conn;
+    DBusConnection* conn;
 } Fixture;
 
 typedef struct {
-    const char *config_file;
-    TestUser user;
-    gboolean expect_success;
+    const char* config_file;
+    TestUser    user;
+    gboolean    expect_success;
 } Config;
 
-static void
-setup (Fixture *f,
-    gconstpointer context)
-{
-  const Config *config = context;
-  gchar *address;
+static void setup(Fixture* f, gconstpointer context) {
+    const Config* config = context;
+    gchar*        address;
 
-  f->ctx = test_main_context_get ();
-  f->ge = NULL;
-  dbus_error_init (&f->e);
+    f->ctx = test_main_context_get();
+    f->ge  = NULL;
+    dbus_error_init(&f->e);
 
-  address = test_get_dbus_daemon (config ? config->config_file : NULL,
-                                  TEST_USER_MESSAGEBUS, NULL,
-                                  &f->daemon_pid);
+    address = test_get_dbus_daemon(config ? config->config_file : NULL, TEST_USER_MESSAGEBUS, NULL, &f->daemon_pid);
 
-  if (address == NULL)
-    {
-      f->skip = TRUE;
-      return;
+    if (address == NULL) {
+        f->skip = TRUE;
+        return;
     }
 
-  f->conn = test_connect_to_bus_as_user (f->ctx, address,
-      config ? config->user : TEST_USER_ME);
+    f->conn = test_connect_to_bus_as_user(f->ctx, address, config ? config->user : TEST_USER_ME);
 
-  if (f->conn == NULL)
-    f->skip = TRUE;
+    if (f->conn == NULL) f->skip = TRUE;
 
-  g_free (address);
+    g_free(address);
 }
 
-static void
-test_uae (Fixture *f,
-    gconstpointer context)
-{
-  const Config *config = context;
-  DBusMessage *m;
-  DBusPendingCall *pc;
-  DBusMessageIter args_iter;
-  DBusMessageIter arr_iter;
+static void test_uae(Fixture* f, gconstpointer context) {
+    const Config*    config = context;
+    DBusMessage*     m;
+    DBusPendingCall* pc;
+    DBusMessageIter  args_iter;
+    DBusMessageIter  arr_iter;
 
-  if (f->skip)
-    return;
+    if (f->skip) return;
 
-  m = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-      DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "UpdateActivationEnvironment");
+    m = dbus_message_new_method_call(
+        DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "UpdateActivationEnvironment");
 
-  if (m == NULL)
-    g_error ("OOM");
+    if (m == NULL) g_error("OOM");
 
-  dbus_message_iter_init_append (m, &args_iter);
+    dbus_message_iter_init_append(m, &args_iter);
 
-  /* Append an empty a{ss} (string => string dictionary). */
-  if (!dbus_message_iter_open_container (&args_iter, DBUS_TYPE_ARRAY,
-        "{ss}", &arr_iter) ||
-      !dbus_message_iter_close_container (&args_iter, &arr_iter))
-    g_error ("OOM");
+    /* Append an empty a{ss} (string => string dictionary). */
+    if (!dbus_message_iter_open_container(&args_iter, DBUS_TYPE_ARRAY, "{ss}", &arr_iter) ||
+        !dbus_message_iter_close_container(&args_iter, &arr_iter))
+        g_error("OOM");
 
-  if (!dbus_connection_send_with_reply (f->conn, m, &pc,
-                                        DBUS_TIMEOUT_USE_DEFAULT) ||
-      pc == NULL)
-    g_error ("OOM");
+    if (!dbus_connection_send_with_reply(f->conn, m, &pc, DBUS_TIMEOUT_USE_DEFAULT) || pc == NULL) g_error("OOM");
 
-  dbus_message_unref (m);
-  m = NULL;
+    dbus_message_unref(m);
+    m = NULL;
 
-  if (dbus_pending_call_get_completed (pc))
-    test_pending_call_store_reply (pc, &m);
-  else if (!dbus_pending_call_set_notify (pc, test_pending_call_store_reply,
-                                          &m, NULL))
-    g_error ("OOM");
+    if (dbus_pending_call_get_completed(pc))
+        test_pending_call_store_reply(pc, &m);
+    else if (!dbus_pending_call_set_notify(pc, test_pending_call_store_reply, &m, NULL))
+        g_error("OOM");
 
-  while (m == NULL)
-    test_main_context_iterate (f->ctx, TRUE);
+    while (m == NULL) test_main_context_iterate(f->ctx, TRUE);
 
-  if (config->expect_success)
-    {
-      /* it succeeds */
-      g_assert_cmpint (dbus_message_get_type (m), ==,
-          DBUS_MESSAGE_TYPE_METHOD_RETURN);
-    }
-  else
-    {
-      /* it fails, yielding an error message with one string argument */
-      g_assert_cmpint (dbus_message_get_type (m), ==, DBUS_MESSAGE_TYPE_ERROR);
-      g_assert_cmpstr (dbus_message_get_error_name (m), ==,
-          DBUS_ERROR_ACCESS_DENIED);
-      g_assert_cmpstr (dbus_message_get_signature (m), ==, "s");
+    if (config->expect_success) {
+        /* it succeeds */
+        g_assert_cmpint(dbus_message_get_type(m), ==, DBUS_MESSAGE_TYPE_METHOD_RETURN);
+    } else {
+        /* it fails, yielding an error message with one string argument */
+        g_assert_cmpint(dbus_message_get_type(m), ==, DBUS_MESSAGE_TYPE_ERROR);
+        g_assert_cmpstr(dbus_message_get_error_name(m), ==, DBUS_ERROR_ACCESS_DENIED);
+        g_assert_cmpstr(dbus_message_get_signature(m), ==, "s");
     }
 
-  dbus_message_unref (m);
+    dbus_message_unref(m);
 }
 
-static void
-test_monitor (Fixture *f,
-    gconstpointer context)
-{
-  const Config *config = context;
-  DBusMessage *m;
-  DBusPendingCall *pc;
-  DBusMessageIter args_iter;
-  DBusMessageIter arr_iter;
-  dbus_uint32_t no_flags = 0;
+static void test_monitor(Fixture* f, gconstpointer context) {
+    const Config*    config = context;
+    DBusMessage*     m;
+    DBusPendingCall* pc;
+    DBusMessageIter  args_iter;
+    DBusMessageIter  arr_iter;
+    dbus_uint32_t    no_flags = 0;
 
-  if (f->skip)
-    return;
+    if (f->skip) return;
 
-  m = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-      DBUS_PATH_DBUS, DBUS_INTERFACE_MONITORING, "BecomeMonitor");
+    m = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_MONITORING, "BecomeMonitor");
 
-  if (m == NULL)
-    g_error ("OOM");
+    if (m == NULL) g_error("OOM");
 
-  dbus_message_iter_init_append (m, &args_iter);
+    dbus_message_iter_init_append(m, &args_iter);
 
-  /* Append an empty as (string array). */
-  if (!dbus_message_iter_open_container (&args_iter, DBUS_TYPE_ARRAY,
-        "s", &arr_iter) ||
-      !dbus_message_iter_close_container (&args_iter, &arr_iter) ||
-      !dbus_message_iter_append_basic (&args_iter,
-        DBUS_TYPE_UINT32, &no_flags))
-    g_error ("OOM");
+    /* Append an empty as (string array). */
+    if (!dbus_message_iter_open_container(&args_iter, DBUS_TYPE_ARRAY, "s", &arr_iter) ||
+        !dbus_message_iter_close_container(&args_iter, &arr_iter) ||
+        !dbus_message_iter_append_basic(&args_iter, DBUS_TYPE_UINT32, &no_flags))
+        g_error("OOM");
 
-  if (!dbus_connection_send_with_reply (f->conn, m, &pc,
-                                        DBUS_TIMEOUT_USE_DEFAULT) ||
-      pc == NULL)
-    g_error ("OOM");
+    if (!dbus_connection_send_with_reply(f->conn, m, &pc, DBUS_TIMEOUT_USE_DEFAULT) || pc == NULL) g_error("OOM");
 
-  dbus_message_unref (m);
-  m = NULL;
+    dbus_message_unref(m);
+    m = NULL;
 
-  if (dbus_pending_call_get_completed (pc))
-    test_pending_call_store_reply (pc, &m);
-  else if (!dbus_pending_call_set_notify (pc, test_pending_call_store_reply,
-                                          &m, NULL))
-    g_error ("OOM");
+    if (dbus_pending_call_get_completed(pc))
+        test_pending_call_store_reply(pc, &m);
+    else if (!dbus_pending_call_set_notify(pc, test_pending_call_store_reply, &m, NULL))
+        g_error("OOM");
 
-  while (m == NULL)
-    test_main_context_iterate (f->ctx, TRUE);
+    while (m == NULL) test_main_context_iterate(f->ctx, TRUE);
 
-  if (config->expect_success)
-    {
-      /* it succeeds */
-      g_assert_cmpint (dbus_message_get_type (m), ==,
-          DBUS_MESSAGE_TYPE_METHOD_RETURN);
-    }
-  else
-    {
-      /* it fails, yielding an error message with one string argument */
-      g_assert_cmpint (dbus_message_get_type (m), ==, DBUS_MESSAGE_TYPE_ERROR);
-      g_assert_cmpstr (dbus_message_get_error_name (m), ==,
-          DBUS_ERROR_ACCESS_DENIED);
-      g_assert_cmpstr (dbus_message_get_signature (m), ==, "s");
+    if (config->expect_success) {
+        /* it succeeds */
+        g_assert_cmpint(dbus_message_get_type(m), ==, DBUS_MESSAGE_TYPE_METHOD_RETURN);
+    } else {
+        /* it fails, yielding an error message with one string argument */
+        g_assert_cmpint(dbus_message_get_type(m), ==, DBUS_MESSAGE_TYPE_ERROR);
+        g_assert_cmpstr(dbus_message_get_error_name(m), ==, DBUS_ERROR_ACCESS_DENIED);
+        g_assert_cmpstr(dbus_message_get_signature(m), ==, "s");
     }
 
-  dbus_message_unref (m);
+    dbus_message_unref(m);
 }
 
-static void
-teardown (Fixture *f,
-    gconstpointer context G_GNUC_UNUSED)
-{
-  dbus_error_free (&f->e);
-  g_clear_error (&f->ge);
+static void teardown(Fixture* f, gconstpointer context G_GNUC_UNUSED) {
+    dbus_error_free(&f->e);
+    g_clear_error(&f->ge);
 
-  if (f->conn != NULL)
-    {
-      dbus_connection_close (f->conn);
-      dbus_connection_unref (f->conn);
-      f->conn = NULL;
+    if (f->conn != NULL) {
+        dbus_connection_close(f->conn);
+        dbus_connection_unref(f->conn);
+        f->conn = NULL;
     }
 
-  if (f->daemon_pid != 0)
-    {
-      test_kill_pid (f->daemon_pid);
-      g_spawn_close_pid (f->daemon_pid);
-      f->daemon_pid = 0;
+    if (f->daemon_pid != 0) {
+        test_kill_pid(f->daemon_pid);
+        g_spawn_close_pid(f->daemon_pid);
+        f->daemon_pid = 0;
     }
 
-  test_main_context_unref (f->ctx);
+    test_main_context_unref(f->ctx);
 }
 
-static Config root_ok_config = {
-    "valid-config-files/multi-user.conf",
-    TEST_USER_ROOT,
-    TRUE
-};
+static Config root_ok_config = {"valid-config-files/multi-user.conf", TEST_USER_ROOT, TRUE};
 
-static Config messagebus_ok_config = {
-    "valid-config-files/multi-user.conf",
-    TEST_USER_MESSAGEBUS,
-    TRUE
-};
+static Config messagebus_ok_config = {"valid-config-files/multi-user.conf", TEST_USER_MESSAGEBUS, TRUE};
 
-static Config other_fail_config = {
-    "valid-config-files/multi-user.conf",
-    TEST_USER_OTHER,
-    FALSE
-};
+static Config other_fail_config = {"valid-config-files/multi-user.conf", TEST_USER_OTHER, FALSE};
 
-int
-main (int argc,
-    char **argv)
-{
-  test_init (&argc, &argv);
+int main(int argc, char** argv) {
+    test_init(&argc, &argv);
 
-  /* UpdateActivationEnvironment used to be allowed by dbus-daemon for root
-   * and messagebus but not for other users (although system.conf forbids it
-   * for everyone, and it's useless). It is now hard-coded to fail on a
-   * system bus for everyone, so don't assert that root and messagebus
-   * may call it; continue to assert that it is denied for unprivileged
-   * users though. */
-  g_test_add ("/uid-permissions/uae/other", Fixture, &other_fail_config,
-      setup, test_uae, teardown);
+    /* UpdateActivationEnvironment used to be allowed by dbus-daemon for root
+     * and messagebus but not for other users (although system.conf forbids it
+     * for everyone, and it's useless). It is now hard-coded to fail on a
+     * system bus for everyone, so don't assert that root and messagebus
+     * may call it; continue to assert that it is denied for unprivileged
+     * users though. */
+    g_test_add("/uid-permissions/uae/other", Fixture, &other_fail_config, setup, test_uae, teardown);
 
-  /* BecomeMonitor has the behaviour that UAE used to have. */
-  g_test_add ("/uid-permissions/monitor/root", Fixture, &root_ok_config,
-      setup, test_monitor, teardown);
-  g_test_add ("/uid-permissions/monitor/messagebus", Fixture, &messagebus_ok_config,
-      setup, test_monitor, teardown);
-  g_test_add ("/uid-permissions/monitor/other", Fixture, &other_fail_config,
-      setup, test_monitor, teardown);
+    /* BecomeMonitor has the behaviour that UAE used to have. */
+    g_test_add("/uid-permissions/monitor/root", Fixture, &root_ok_config, setup, test_monitor, teardown);
+    g_test_add("/uid-permissions/monitor/messagebus", Fixture, &messagebus_ok_config, setup, test_monitor, teardown);
+    g_test_add("/uid-permissions/monitor/other", Fixture, &other_fail_config, setup, test_monitor, teardown);
 
-  return g_test_run ();
+    return g_test_run();
 }

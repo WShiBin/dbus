@@ -19,55 +19,53 @@
 
 #include <dbus/dbus-macros.h>
 
-int exception_handler (LPEXCEPTION_POINTERS p) _DBUS_GNUC_NORETURN;
+int exception_handler(LPEXCEPTION_POINTERS p) _DBUS_GNUC_NORETURN;
 
 /* Explicit Windows exception handlers needed to supress OS popups */
-int
-exception_handler(LPEXCEPTION_POINTERS p)
-{
-  fprintf(stderr, "test-segfault: raised fatal exception as intended\n");
-  ExitProcess(0xc0000005);
+int exception_handler(LPEXCEPTION_POINTERS p) {
+    fprintf(stderr, "test-segfault: raised fatal exception as intended\n");
+    ExitProcess(0xc0000005);
 }
 #endif
 
-int
-main (int argc, char **argv)
-{
-  char *p;  
+int main(int argc, char** argv) {
+    char* p;
 
 #ifdef DBUS_WIN
-  /* Disable Windows popup dialog when an app crashes so that app quits
-   * immediately with error code instead of waiting for user to dismiss
-   * the dialog.  */
-  DWORD dwMode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
-  SetErrorMode(dwMode | SEM_NOGPFAULTERRORBOX);
-  /* Disable "just in time" debugger */
-  SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)&exception_handler);
+    /* Disable Windows popup dialog when an app crashes so that app quits
+     * immediately with error code instead of waiting for user to dismiss
+     * the dialog.  */
+    DWORD dwMode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    SetErrorMode(dwMode | SEM_NOGPFAULTERRORBOX);
+    /* Disable "just in time" debugger */
+    SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)&exception_handler);
 #endif
 
 #ifdef HAVE_SETRLIMIT
-  /* No core dumps please, we know we crashed. */
-  struct rlimit r = { 0, };
-  
-  getrlimit (RLIMIT_CORE, &r);
-  r.rlim_cur = 0;
-  setrlimit (RLIMIT_CORE, &r);
+    /* No core dumps please, we know we crashed. */
+    struct rlimit r = {
+        0,
+    };
+
+    getrlimit(RLIMIT_CORE, &r);
+    r.rlim_cur = 0;
+    setrlimit(RLIMIT_CORE, &r);
 #endif
 
 #if defined(HAVE_PRCTL) && defined(PR_SET_DUMPABLE)
-  /* Really, no core dumps please. On Linux, if core_pattern is
-   * set to a pipe (for abrt/apport/corekeeper/etc.), RLIMIT_CORE of 0
-   * is ignored (deliberately, so people can debug init(8) and other
-   * early stuff); but Linux has PR_SET_DUMPABLE, so we can avoid core
-   * dumps anyway. */
-  prctl (PR_SET_DUMPABLE, 0, 0, 0, 0);
+    /* Really, no core dumps please. On Linux, if core_pattern is
+     * set to a pipe (for abrt/apport/corekeeper/etc.), RLIMIT_CORE of 0
+     * is ignored (deliberately, so people can debug init(8) and other
+     * early stuff); but Linux has PR_SET_DUMPABLE, so we can avoid core
+     * dumps anyway. */
+    prctl(PR_SET_DUMPABLE, 0, 0, 0, 0);
 #endif
 
 #ifdef HAVE_RAISE
-  raise (SIGSEGV);
+    raise(SIGSEGV);
 #endif
-  p = NULL;
-  *p = 'a';
-  
-  return 0;
+    p  = NULL;
+    *p = 'a';
+
+    return 0;
 }

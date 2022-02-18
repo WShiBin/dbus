@@ -27,137 +27,107 @@
 #include <dbus/dbus-uuidgen.h>
 #include <dbus/dbus.h>
 
-static void usage (const char *name, int ecode) _DBUS_GNUC_NORETURN;
+static void usage(const char* name, int ecode) _DBUS_GNUC_NORETURN;
 
-static void
-usage (const char *name,
-       int ecode)
-{
-  if (name == NULL)
-    name = "dbus-uuidgen";
-  
-  fprintf (stderr, "Usage: %s [--ensure[=FILENAME]] [--get[=FILENAME]]\n", name);
-  exit (ecode);
+static void usage(const char* name, int ecode) {
+    if (name == NULL) name = "dbus-uuidgen";
+
+    fprintf(stderr, "Usage: %s [--ensure[=FILENAME]] [--get[=FILENAME]]\n", name);
+    exit(ecode);
 }
 
-static void version (void) _DBUS_GNUC_NORETURN;
+static void version(void) _DBUS_GNUC_NORETURN;
 
-static void
-version (void)
-{
-  printf ("D-Bus UUID Generator %s\n"
-          "Copyright (C) 2006 Red Hat, Inc.\n"
-          "This is free software; see the source for copying conditions.\n"
-          "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n",
-          VERSION);
-  exit (0);
+static void version(void) {
+    printf(
+        "D-Bus UUID Generator %s\n"
+        "Copyright (C) 2006 Red Hat, Inc.\n"
+        "This is free software; see the source for copying conditions.\n"
+        "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n",
+        VERSION);
+    exit(0);
 }
 
-static dbus_bool_t
-get_arg (const char  *arg,
-         const char  *option,
-         const char **value_p)
-{
-  const char *fn;
+static dbus_bool_t get_arg(const char* arg, const char* option, const char** value_p) {
+    const char* fn;
 
-  if (strlen(arg) < strlen(option))
+    if (strlen(arg) < strlen(option)) return FALSE;
+
+    fn = arg + strlen(option);
+
+    if (!(*fn == '=' || *fn == ' ' || *fn == '\0')) {
+        usage(NULL, 1);
+    }
+
+    if (*fn == '=') ++fn;
+
+    while (*fn == ' ' && *fn != '\0') ++fn;
+
+    if (*fn != '\0') {
+        *value_p = fn;
+        return TRUE;
+    }
+
     return FALSE;
-  
-  fn = arg + strlen(option);
-
-  if (!(*fn == '=' || *fn == ' ' || *fn == '\0'))
-    {
-      usage (NULL, 1);
-    }
-  
-  if (*fn == '=')
-    ++fn;
-  
-  while (*fn == ' ' && *fn != '\0')
-    ++fn;
-  
-  if (*fn != '\0')
-    {
-      *value_p = fn;
-      return TRUE;
-    }
-
-  return FALSE;
 }
 
-int
-main (int argc, char *argv[])
-{
-  int i;
-  const char *filename;
-  dbus_bool_t ensure_uuid;
-  dbus_bool_t get_uuid;
-  DBusError error;
+int main(int argc, char* argv[]) {
+    int         i;
+    const char* filename;
+    dbus_bool_t ensure_uuid;
+    dbus_bool_t get_uuid;
+    DBusError   error;
 
-  ensure_uuid = FALSE;
-  get_uuid = FALSE;
-  
-  filename = NULL;
+    ensure_uuid = FALSE;
+    get_uuid    = FALSE;
 
-  for (i = 1; i < argc; i++)
-    {
-      char *arg = argv[i];
+    filename = NULL;
 
-      if (strncmp (arg, "--ensure", strlen("--ensure")) == 0)
-        {
-          get_arg (arg, "--ensure", &filename);
-          ensure_uuid = TRUE;
-        }
-      else if (strncmp (arg, "--get", strlen("--get")) == 0)
-        {
-          get_arg (arg, "--get", &filename);
-          get_uuid = TRUE;
-        }
-      else if (strcmp (arg, "--help") == 0)
-	usage (argv[0], 0);
-      else if (strcmp (arg, "--version") == 0)
-        version ();
-      else
-        usage (argv[0], 1);
+    for (i = 1; i < argc; i++) {
+        char* arg = argv[i];
+
+        if (strncmp(arg, "--ensure", strlen("--ensure")) == 0) {
+            get_arg(arg, "--ensure", &filename);
+            ensure_uuid = TRUE;
+        } else if (strncmp(arg, "--get", strlen("--get")) == 0) {
+            get_arg(arg, "--get", &filename);
+            get_uuid = TRUE;
+        } else if (strcmp(arg, "--help") == 0)
+            usage(argv[0], 0);
+        else if (strcmp(arg, "--version") == 0)
+            version();
+        else
+            usage(argv[0], 1);
     }
 
-  if (get_uuid && ensure_uuid)
-    {
-      fprintf (stderr, "Can't specify both --get and --ensure\n");
-      exit (1);
+    if (get_uuid && ensure_uuid) {
+        fprintf(stderr, "Can't specify both --get and --ensure\n");
+        exit(1);
     }
 
-  dbus_error_init (&error);
-  
-  if (get_uuid || ensure_uuid)
-    {
-      char *uuid;
-      if (dbus_internal_do_not_use_get_uuid (filename, &uuid, ensure_uuid, &error))
-        {
-          if (get_uuid) /* print nothing on --ensure */
-            printf ("%s\n", uuid);
-          dbus_free (uuid);
+    dbus_error_init(&error);
+
+    if (get_uuid || ensure_uuid) {
+        char* uuid;
+        if (dbus_internal_do_not_use_get_uuid(filename, &uuid, ensure_uuid, &error)) {
+            if (get_uuid) /* print nothing on --ensure */
+                printf("%s\n", uuid);
+            dbus_free(uuid);
         }
-    }
-  else
-    {
-      char *uuid;
+    } else {
+        char* uuid;
 
-      if (_dbus_create_uuid (&uuid, &error))
-        {
-          printf ("%s\n", uuid);
-          dbus_free (uuid);
+        if (_dbus_create_uuid(&uuid, &error)) {
+            printf("%s\n", uuid);
+            dbus_free(uuid);
         }
     }
 
-  if (dbus_error_is_set (&error))
-    {
-      fprintf (stderr, "%s\n", error.message);
-      dbus_error_free (&error);
-      exit (1);
-    }
-  else
-    {
-      exit (0);
+    if (dbus_error_is_set(&error)) {
+        fprintf(stderr, "%s\n", error.message);
+        dbus_error_free(&error);
+        exit(1);
+    } else {
+        exit(0);
     }
 }

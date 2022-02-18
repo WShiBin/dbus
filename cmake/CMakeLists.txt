@@ -221,8 +221,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNINGS_CFLAGS}")
 
 if (UNIX AND NOT DBUS_DISABLE_ASSERT)
 	# required for backtrace
-	SET(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}   -Wl,--export-dynamic")
-	SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wl,--export-dynamic")
+    if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        SET(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}   -Wl,--export-dynamic")
+        SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wl,--export-dynamic")
+    endif()
 	add_definitions(-DDBUS_BUILT_R_DYNAMIC)
 endif (UNIX AND NOT DBUS_DISABLE_ASSERT)
 
@@ -295,7 +297,7 @@ ENABLE_TESTING()
 # TODO: take check from configure.in
 
 option (DBUS_BUILD_TESTS "enable unit test code" ON)
- 
+
 if(DBUS_BUILD_TESTS)
     set (DBUS_ENABLE_EMBEDDED_TESTS ON)
     set (DBUS_ENABLE_MODULAR_TESTS ON)
@@ -654,7 +656,7 @@ MESSAGE(" ")
 INCLUDE(modules/CPackInstallConfig.cmake)
 
 add_custom_target(help-options
-    cmake -LH 
+    cmake -LH
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 

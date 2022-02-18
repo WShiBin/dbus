@@ -28,11 +28,12 @@
 #include <dbus/dbus-marshal-recursive.h>
 
 DBUS_PRIVATE_EXPORT
-void _dbus_marshal_byteswap (const DBusString *signature,
-                             int               signature_start,
-                             int               old_byte_order,
-                             int               new_byte_order,
-                             DBusString       *value_str,
-                             int               value_pos);
+void _dbus_marshal_byteswap(
+    const DBusString* signature,
+    int               signature_start,
+    int               old_byte_order,
+    int               new_byte_order,
+    DBusString*       value_str,
+    int               value_pos);
 
 #endif /* DBUS_MARSHAL_BYTESWAP_H */

@@ -4,7 +4,7 @@
  * Copyright (C) 2005  Red Hat Inc.
  *
  * Licensed under the Academic Free License version 2.1
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,7 +14,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -57,34 +57,33 @@ DBUS_BEGIN_DECLS
  * Implementation details of DBusMessageLoader.
  * All members are private.
  */
-struct DBusMessageLoader
-{
-  int refcount;        /**< Reference count. */
+struct DBusMessageLoader {
+    int refcount; /**< Reference count. */
 
-  DBusString data;     /**< Buffered data */
+    DBusString data; /**< Buffered data */
 
-  DBusList *messages;  /**< Complete messages. */
+    DBusList* messages; /**< Complete messages. */
 
-  long max_message_size; /**< Maximum size of a message */
-  long max_message_unix_fds; /**< Maximum unix fds in a message */
+    long max_message_size;     /**< Maximum size of a message */
+    long max_message_unix_fds; /**< Maximum unix fds in a message */
 
-  DBusValidity corruption_reason; /**< why we were corrupted */
+    DBusValidity corruption_reason; /**< why we were corrupted */
 
-  unsigned int corrupted : 1; /**< We got broken data, and are no longer working */
+    unsigned int corrupted : 1; /**< We got broken data, and are no longer working */
 
-  unsigned int buffer_outstanding : 1; /**< Someone is using the buffer to read */
+    unsigned int buffer_outstanding : 1; /**< Someone is using the buffer to read */
 
 #ifdef HAVE_UNIX_FD_PASSING
-  unsigned int unix_fds_outstanding : 1; /**< Someone is using the unix fd array to read */
+    unsigned int unix_fds_outstanding : 1; /**< Someone is using the unix fd array to read */
 
-  int *unix_fds; /**< File descriptors that have been read from the transport but not yet been handed to any message. Array will be allocated at first use. */
-  unsigned n_unix_fds_allocated; /**< Number of file descriptors this array has space for */
-  unsigned n_unix_fds; /**< Number of valid file descriptors in array */
-  void (* unix_fds_change) (void *); /**< Notify when the pending fds change */
-  void *unix_fds_change_data;
+    int* unix_fds; /**< File descriptors that have been read from the transport but not yet been handed to any message.
+                      Array will be allocated at first use. */
+    unsigned n_unix_fds_allocated;  /**< Number of file descriptors this array has space for */
+    unsigned n_unix_fds;            /**< Number of valid file descriptors in array */
+    void (*unix_fds_change)(void*); /**< Notify when the pending fds change */
+    void* unix_fds_change_data;
 #endif
 };
-
 
 /** How many bits are in the changed_stamp used to validate iterators */
 #define CHANGED_STAMP_BITS 21
@@ -96,48 +95,48 @@ struct DBusMessageLoader
  * another application. This is an opaque object, all members
  * are private.
  */
-struct DBusMessage
-{
-  DBusAtomic refcount; /**< Reference count */
+struct DBusMessage {
+    DBusAtomic refcount; /**< Reference count */
 
-  DBusHeader header; /**< Header network data and associated cache */
+    DBusHeader header; /**< Header network data and associated cache */
 
-  DBusString body;   /**< Body network data. */
+    DBusString body; /**< Body network data. */
 
-  unsigned int locked : 1; /**< Message being sent, no modifications allowed. */
+    unsigned int locked : 1; /**< Message being sent, no modifications allowed. */
 
 #ifndef DBUS_DISABLE_CHECKS
-  unsigned int in_cache : 1; /**< Has been "freed" since it's in the cache (this is a debug feature) */
+    unsigned int in_cache : 1; /**< Has been "freed" since it's in the cache (this is a debug feature) */
 #endif
 
-  DBusList *counters;   /**< 0-N DBusCounter used to track message size/unix fds. */
-  long size_counter_delta;   /**< Size we incremented the size counters by.   */
+    DBusList* counters;           /**< 0-N DBusCounter used to track message size/unix fds. */
+    long      size_counter_delta; /**< Size we incremented the size counters by.   */
 
-  dbus_uint32_t changed_stamp : CHANGED_STAMP_BITS; /**< Incremented when iterators are invalidated. */
+    dbus_uint32_t changed_stamp : CHANGED_STAMP_BITS; /**< Incremented when iterators are invalidated. */
 
-  DBusDataSlotList slot_list;   /**< Data stored by allocated integer ID */
+    DBusDataSlotList slot_list; /**< Data stored by allocated integer ID */
 
 #ifndef DBUS_DISABLE_CHECKS
-  int generation; /**< _dbus_current_generation when message was created */
+    int generation; /**< _dbus_current_generation when message was created */
 #endif
 
 #ifdef HAVE_UNIX_FD_PASSING
-  int *unix_fds;
-  /**< Unix file descriptors associated with this message. These are
-     closed when the message is destroyed, hence make sure to dup()
-     them when adding or removing them here. */
-  unsigned n_unix_fds; /**< Number of valid fds in the array */
-  unsigned n_unix_fds_allocated; /**< Allocated size of the array */
+    int* unix_fds;
+    /**< Unix file descriptors associated with this message. These are
+       closed when the message is destroyed, hence make sure to dup()
+       them when adding or removing them here. */
+    unsigned n_unix_fds;           /**< Number of valid fds in the array */
+    unsigned n_unix_fds_allocated; /**< Allocated size of the array */
 
-  long unix_fd_counter_delta; /**< Size we incremented the unix fd counter by */
+    long unix_fd_counter_delta; /**< Size we incremented the unix fd counter by */
 #endif
 };
 
 DBUS_PRIVATE_EXPORT
-dbus_bool_t _dbus_message_iter_get_args_valist (DBusMessageIter *iter,
-                                                DBusError       *error,
-                                                int              first_arg_type,
-                                                va_list          var_args);
+dbus_bool_t _dbus_message_iter_get_args_valist(
+    DBusMessageIter* iter,
+    DBusError*       error,
+    int              first_arg_type,
+    va_list          var_args);
 
 /** @} */
 

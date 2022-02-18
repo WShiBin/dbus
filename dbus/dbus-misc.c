@@ -4,7 +4,7 @@
  * Copyright (C) 2006 Red Hat, Inc.
  *
  * Licensed under the Academic Free License version 2.1
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,7 +14,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -38,7 +38,7 @@
  * Obtains the machine UUID of the machine this process is running on.
  *
  * The returned string must be freed with dbus_free().
- * 
+ *
  * This UUID is guaranteed to remain the same until the next reboot
  * (unless the sysadmin foolishly changes it and screws themselves).
  * It will usually remain the same across reboots also, but hardware
@@ -69,38 +69,30 @@
  *
  * @returns a 32-byte-long hex-encoded UUID string, or #NULL on failure
  */
-char *
-dbus_try_get_local_machine_id (DBusError *error)
-{
-  DBusString uuid;
-  char *s;
+char* dbus_try_get_local_machine_id(DBusError* error) {
+    DBusString uuid;
+    char*      s;
 
-  s = NULL;
+    s = NULL;
 
-  if (!_dbus_string_init (&uuid))
-    {
-      dbus_set_error (error, DBUS_ERROR_NO_MEMORY, NULL);
-      return NULL;
+    if (!_dbus_string_init(&uuid)) {
+        dbus_set_error(error, DBUS_ERROR_NO_MEMORY, NULL);
+        return NULL;
     }
 
-  if (!_dbus_get_local_machine_uuid_encoded (&uuid, error))
-    {
-      _dbus_string_free (&uuid);
-      return NULL;
+    if (!_dbus_get_local_machine_uuid_encoded(&uuid, error)) {
+        _dbus_string_free(&uuid);
+        return NULL;
     }
 
-  if (!_dbus_string_steal_data (&uuid, &s))
-    {
-      dbus_set_error (error, DBUS_ERROR_NO_MEMORY, NULL);
-      _dbus_string_free (&uuid);
-      return NULL;
+    if (!_dbus_string_steal_data(&uuid, &s)) {
+        dbus_set_error(error, DBUS_ERROR_NO_MEMORY, NULL);
+        _dbus_string_free(&uuid);
+        return NULL;
+    } else {
+        _dbus_string_free(&uuid);
+        return s;
     }
-  else
-    {
-      _dbus_string_free (&uuid);
-      return s;
-    }
-
 }
 
 /**
@@ -118,29 +110,25 @@ dbus_try_get_local_machine_id (DBusError *error)
  *
  * @returns a 32-byte-long hex-encoded UUID string, or #NULL on failure
  */
-char *
-dbus_get_local_machine_id (void)
-{
-  DBusError error = DBUS_ERROR_INIT;
-  char *s;
+char* dbus_get_local_machine_id(void) {
+    DBusError error = DBUS_ERROR_INIT;
+    char*     s;
 
-  s = dbus_try_get_local_machine_id (&error);
+    s = dbus_try_get_local_machine_id(&error);
 
-  /* The documentation says dbus_get_local_machine_id() only fails on OOM;
-   * this can actually also fail if the D-Bus installation is faulty
-   * (no UUID), but we have no good way to report that. Historically,
-   * _dbus_get_local_machine_uuid_encoded was responsible for issuing the
-   * warning; now we do that here. */
-  if (s == NULL)
-    {
-      if (!dbus_error_has_name (&error, DBUS_ERROR_NO_MEMORY))
-        _dbus_warn_check_failed ("%s", error.message);
+    /* The documentation says dbus_get_local_machine_id() only fails on OOM;
+     * this can actually also fail if the D-Bus installation is faulty
+     * (no UUID), but we have no good way to report that. Historically,
+     * _dbus_get_local_machine_uuid_encoded was responsible for issuing the
+     * warning; now we do that here. */
+    if (s == NULL) {
+        if (!dbus_error_has_name(&error, DBUS_ERROR_NO_MEMORY)) _dbus_warn_check_failed("%s", error.message);
 
-      dbus_error_free (&error);
-      return NULL;
+        dbus_error_free(&error);
+        return NULL;
     }
 
-  return s;
+    return s;
 }
 
 /**
@@ -200,25 +188,17 @@ dbus_get_local_machine_id (void)
  * MINOR changes if API is added, and the MICRO changes with each
  * release of a MAJOR.MINOR series.  The MINOR is an odd number for
  * development releases and an even number for stable releases.
- * 
+ *
  * @param major_version_p pointer to return the major version, or #NULL
  * @param minor_version_p pointer to return the minor version, or #NULL
- * @param micro_version_p pointer to return the micro version, or #NULL 
- * 
+ * @param micro_version_p pointer to return the micro version, or #NULL
+ *
  */
-void
-dbus_get_version (int *major_version_p,
-                  int *minor_version_p,
-                  int *micro_version_p)
-{
-  if (major_version_p)
-    *major_version_p = DBUS_MAJOR_VERSION;
-  if (minor_version_p)
-    *minor_version_p = DBUS_MINOR_VERSION;
-  if (micro_version_p)
-    *micro_version_p = DBUS_MICRO_VERSION;
+void dbus_get_version(int* major_version_p, int* minor_version_p, int* micro_version_p) {
+    if (major_version_p) *major_version_p = DBUS_MAJOR_VERSION;
+    if (minor_version_p) *minor_version_p = DBUS_MINOR_VERSION;
+    if (micro_version_p) *micro_version_p = DBUS_MICRO_VERSION;
 }
-
 
 /** @} */ /* End of public API */
 
@@ -229,67 +209,61 @@ dbus_get_version (int *major_version_p,
 #include "dbus-test.h"
 #include <stdlib.h>
 
+dbus_bool_t _dbus_misc_test(void) {
+    int        major, minor, micro;
+    DBusString str;
 
-dbus_bool_t
-_dbus_misc_test (void)
-{
-  int major, minor, micro;
-  DBusString str;
+    /* make sure we don't crash on NULL */
+    dbus_get_version(NULL, NULL, NULL);
 
-  /* make sure we don't crash on NULL */
-  dbus_get_version (NULL, NULL, NULL);
+    /* Now verify that all the compile-time version stuff
+     * is right and matches the runtime. These tests
+     * are mostly intended to catch various kinds of
+     * typo (mixing up major and minor, that sort of thing).
+     */
+    dbus_get_version(&major, &minor, &micro);
 
-  /* Now verify that all the compile-time version stuff
-   * is right and matches the runtime. These tests
-   * are mostly intended to catch various kinds of
-   * typo (mixing up major and minor, that sort of thing).
-   */
-  dbus_get_version (&major, &minor, &micro);
-
-  _dbus_assert (major == DBUS_MAJOR_VERSION);
-  _dbus_assert (minor == DBUS_MINOR_VERSION);
-  _dbus_assert (micro == DBUS_MICRO_VERSION);
+    _dbus_assert(major == DBUS_MAJOR_VERSION);
+    _dbus_assert(minor == DBUS_MINOR_VERSION);
+    _dbus_assert(micro == DBUS_MICRO_VERSION);
 
 #define MAKE_VERSION(x, y, z) (((x) << 16) | ((y) << 8) | (z))
 
-  /* check that MAKE_VERSION works and produces the intended ordering */
-  _dbus_assert (MAKE_VERSION (1, 0, 0) > MAKE_VERSION (0, 0, 0));
-  _dbus_assert (MAKE_VERSION (1, 1, 0) > MAKE_VERSION (1, 0, 0));
-  _dbus_assert (MAKE_VERSION (1, 1, 1) > MAKE_VERSION (1, 1, 0));
+    /* check that MAKE_VERSION works and produces the intended ordering */
+    _dbus_assert(MAKE_VERSION(1, 0, 0) > MAKE_VERSION(0, 0, 0));
+    _dbus_assert(MAKE_VERSION(1, 1, 0) > MAKE_VERSION(1, 0, 0));
+    _dbus_assert(MAKE_VERSION(1, 1, 1) > MAKE_VERSION(1, 1, 0));
 
-  _dbus_assert (MAKE_VERSION (2, 0, 0) > MAKE_VERSION (1, 1, 1));
-  _dbus_assert (MAKE_VERSION (2, 1, 0) > MAKE_VERSION (1, 1, 1));
-  _dbus_assert (MAKE_VERSION (2, 1, 1) > MAKE_VERSION (1, 1, 1));
+    _dbus_assert(MAKE_VERSION(2, 0, 0) > MAKE_VERSION(1, 1, 1));
+    _dbus_assert(MAKE_VERSION(2, 1, 0) > MAKE_VERSION(1, 1, 1));
+    _dbus_assert(MAKE_VERSION(2, 1, 1) > MAKE_VERSION(1, 1, 1));
 
-  /* check DBUS_VERSION */
-  _dbus_assert (MAKE_VERSION (major, minor, micro) == DBUS_VERSION);
+    /* check DBUS_VERSION */
+    _dbus_assert(MAKE_VERSION(major, minor, micro) == DBUS_VERSION);
 
-  /* check that ordering works with DBUS_VERSION */
-  _dbus_assert (MAKE_VERSION (major - 1, minor, micro) < DBUS_VERSION);
-  _dbus_assert (MAKE_VERSION (major, minor - 1, micro) < DBUS_VERSION);
-  _dbus_assert (MAKE_VERSION (major, minor, micro - 1) < DBUS_VERSION);
-  
-  _dbus_assert (MAKE_VERSION (major + 1, minor, micro) > DBUS_VERSION);
-  _dbus_assert (MAKE_VERSION (major, minor + 1, micro) > DBUS_VERSION);
-  _dbus_assert (MAKE_VERSION (major, minor, micro + 1) > DBUS_VERSION);
+    /* check that ordering works with DBUS_VERSION */
+    _dbus_assert(MAKE_VERSION(major - 1, minor, micro) < DBUS_VERSION);
+    _dbus_assert(MAKE_VERSION(major, minor - 1, micro) < DBUS_VERSION);
+    _dbus_assert(MAKE_VERSION(major, minor, micro - 1) < DBUS_VERSION);
 
-  /* Check DBUS_VERSION_STRING */
+    _dbus_assert(MAKE_VERSION(major + 1, minor, micro) > DBUS_VERSION);
+    _dbus_assert(MAKE_VERSION(major, minor + 1, micro) > DBUS_VERSION);
+    _dbus_assert(MAKE_VERSION(major, minor, micro + 1) > DBUS_VERSION);
 
-  if (!_dbus_string_init (&str))
-    _dbus_assert_not_reached ("no memory");
+    /* Check DBUS_VERSION_STRING */
 
-  if (!(_dbus_string_append_int (&str, major) &&
-        _dbus_string_append_byte (&str, '.') &&
-        _dbus_string_append_int (&str, minor) &&
-        _dbus_string_append_byte (&str, '.') &&
-        _dbus_string_append_int (&str, micro)))
-    _dbus_assert_not_reached ("no memory");
+    if (!_dbus_string_init(&str)) _dbus_assert_not_reached("no memory");
 
-  _dbus_assert (_dbus_string_equal_c_str (&str, DBUS_VERSION_STRING));
+    if (!(_dbus_string_append_int(&str, major) && _dbus_string_append_byte(&str, '.') &&
+          _dbus_string_append_int(&str, minor) && _dbus_string_append_byte(&str, '.') &&
+          _dbus_string_append_int(&str, micro)))
+        _dbus_assert_not_reached("no memory");
 
-  _dbus_string_free (&str);
-   
-  return TRUE;
+    _dbus_assert(_dbus_string_equal_c_str(&str, DBUS_VERSION_STRING));
+
+    _dbus_string_free(&str);
+
+    return TRUE;
 }
 
 #endif /* !DOXYGEN_SHOULD_SKIP_THIS */

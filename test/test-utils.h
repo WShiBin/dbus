@@ -10,22 +10,16 @@
 #include <dbus/dbus-internals.h>
 typedef DBusLoop TestMainContext;
 
-TestMainContext *test_main_context_get            (void);
-TestMainContext *test_main_context_ref            (TestMainContext *ctx);
-void             test_main_context_unref          (TestMainContext *ctx);
-void             test_main_context_iterate        (TestMainContext *ctx,
-                                                   dbus_bool_t      may_block);
+TestMainContext* test_main_context_get(void);
+TestMainContext* test_main_context_ref(TestMainContext* ctx);
+void             test_main_context_unref(TestMainContext* ctx);
+void             test_main_context_iterate(TestMainContext* ctx, dbus_bool_t may_block);
 
-dbus_bool_t test_connection_setup                 (TestMainContext *ctx,
-                                                   DBusConnection *connection);
-void        test_connection_shutdown              (TestMainContext *ctx,
-                                                   DBusConnection *connection);
+dbus_bool_t test_connection_setup(TestMainContext* ctx, DBusConnection* connection);
+void        test_connection_shutdown(TestMainContext* ctx, DBusConnection* connection);
 
-dbus_bool_t test_server_setup                     (TestMainContext *ctx,
-                                                   DBusServer    *server);
-void        test_server_shutdown                  (TestMainContext *ctx,
-                                                   DBusServer    *server);
-void        test_pending_call_store_reply         (DBusPendingCall *pc,
-                                                   void *data);
+dbus_bool_t test_server_setup(TestMainContext* ctx, DBusServer* server);
+void        test_server_shutdown(TestMainContext* ctx, DBusServer* server);
+void        test_pending_call_store_reply(DBusPendingCall* pc, void* data);
 
 #endif

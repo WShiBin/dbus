@@ -7,7 +7,7 @@ endif(DOXYGEN_EXECUTABLE)
 if (DBUS_ENABLE_DOXYGEN_DOCS)
     set (top_srcdir ${CMAKE_SOURCE_DIR}/..)
     configure_file(${CMAKE_SOURCE_DIR}/../Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile )
-    add_custom_target(doc 
+    add_custom_target(doc
         COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
@@ -15,7 +15,7 @@ endif (DBUS_ENABLE_DOXYGEN_DOCS)
 
 #
 # find docbook generator
-# 
+#
 find_program(MEINPROC4_EXECUTABLE meinproc4)
 
 find_program(XMLTO_EXECUTABLE xmlto)
@@ -105,9 +105,9 @@ macro (DOCBOOK _sources _format)
   ADD_DEPENDENCIES(xmldoc ${_outname})
 endmacro (DOCBOOK)
 
-### copy tests to builddir so that generated tests and static tests 
+### copy tests to builddir so that generated tests and static tests
 ### are all in one place.
-### todo how to add more filetypes 
+### todo how to add more filetypes
 MACRO (COPYDIR _src _type)
     FOREACH(FILE_TYPE ${_type})
     	FOREACH(DIR ${_src})
@@ -164,9 +164,9 @@ endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/index.html.cmake ${CMAKE_CURRENT_BINARY_DIR}/index.html )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/index.html DESTINATION share/doc/dbus)
 
-set (EXTRA_DIST 	
-	${CMAKE_SOURCE_DIR}/../doc/busconfig.dtd			
-	${CMAKE_SOURCE_DIR}/../doc/introspect.dtd			
+set (EXTRA_DIST
+	${CMAKE_SOURCE_DIR}/../doc/busconfig.dtd
+	${CMAKE_SOURCE_DIR}/../doc/introspect.dtd
 	${CMAKE_SOURCE_DIR}/../doc/introspect.xsl
 )
 

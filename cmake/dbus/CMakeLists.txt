@@ -62,12 +62,12 @@ set (DBUS_LIB_SOURCES
 
 
 if(UNIX)
-	set (DBUS_LIB_SOURCES ${DBUS_LIB_SOURCES} 
+	set (DBUS_LIB_SOURCES ${DBUS_LIB_SOURCES}
 		${DBUS_DIR}/dbus-transport-unix.c
 		${DBUS_DIR}/dbus-server-unix.c
 	)
 else(UNIX)
-	set (DBUS_LIB_SOURCES ${DBUS_LIB_SOURCES} 
+	set (DBUS_LIB_SOURCES ${DBUS_LIB_SOURCES}
 		${DBUS_DIR}/dbus-transport-win.c
 		${DBUS_DIR}/dbus-server-win.c
 	)
@@ -101,19 +101,19 @@ set (DBUS_LIB_HEADERS
 	${CMAKE_BINARY_DIR}/config.h
 )
 if(UNIX)
-	set (DBUS_LIB_HEADERS ${DBUS_LIB_HEADERS} 
+	set (DBUS_LIB_HEADERS ${DBUS_LIB_HEADERS}
 		${DBUS_DIR}/dbus-transport-unix.h
 	)
 else(UNIX)
-	set (DBUS_LIB_HEADERS ${DBUS_LIB_HEADERS} 
+	set (DBUS_LIB_HEADERS ${DBUS_LIB_HEADERS}
 		${DBUS_DIR}/dbus-transport-win.h
 	)
 endif(UNIX)
 
 
 ### source code that goes in the installed client library
-### AND is generic utility functionality used by the 
-### daemon or test programs (all symbols in here should 
+### AND is generic utility functionality used by the
+### daemon or test programs (all symbols in here should
 ### be underscore-prefixed)
 set (DBUS_SHARED_SOURCES
 	${DBUS_DIR}/dbus-dataslot.c
@@ -145,8 +145,8 @@ set (DBUS_SHARED_HEADERS
 
 ### source code that is generic utility functionality used
 ### by the bus daemon or test apps, but is NOT included
-### in the D-BUS client library (all symbols in here 
-### should be underscore-prefixed but don't really need 
+### in the D-BUS client library (all symbols in here
+### should be underscore-prefixed but don't really need
 ### to be unless they move to DBUS_SHARED_SOURCES later)
 set (DBUS_UTIL_SOURCES
 	${DBUS_DIR}/dbus-asv-util.c
@@ -167,7 +167,7 @@ set (DBUS_UTIL_SOURCES
 )
 
 if (DBUS_ENABLE_EMBEDDED_TESTS)
-	set (DBUS_UTIL_SOURCES 
+	set (DBUS_UTIL_SOURCES
 		${DBUS_UTIL_SOURCES}
 		${DBUS_DIR}/dbus-test.c
 		${DBUS_DIR}/dbus-spawn-test.c
@@ -187,14 +187,14 @@ set (DBUS_UTIL_HEADERS
 
 ### platform specific settings
 if (WIN32)
-	set (DBUS_SHARED_SOURCES ${DBUS_SHARED_SOURCES} 
+	set (DBUS_SHARED_SOURCES ${DBUS_SHARED_SOURCES}
 		${DBUS_DIR}/dbus-file-win.c
 		${DBUS_DIR}/dbus-init-win.cpp
 		${DBUS_DIR}/dbus-sysdeps-win.c
 		${DBUS_DIR}/dbus-pipe-win.c
 		${DBUS_DIR}/dbus-sysdeps-thread-win.c
 	)
-	set (DBUS_SHARED_HEADERS ${DBUS_SHARED_HEADERS} 
+	set (DBUS_SHARED_HEADERS ${DBUS_SHARED_HEADERS}
 		${DBUS_DIR}/dbus-sockets-win.h
 		${DBUS_DIR}/dbus-sysdeps-win.h
 	)
@@ -211,14 +211,14 @@ if (WIN32)
 	)
 	endif(WINCE)
 else (WIN32)
-	set (DBUS_SHARED_SOURCES ${DBUS_SHARED_SOURCES} 
+	set (DBUS_SHARED_SOURCES ${DBUS_SHARED_SOURCES}
 		${DBUS_DIR}/dbus-file-unix.c
 		${DBUS_DIR}/dbus-pipe-unix.c
 		${DBUS_DIR}/dbus-sysdeps-unix.c
 		${DBUS_DIR}/dbus-sysdeps-pthread.c
 		${DBUS_DIR}/dbus-userdb.c
 	)
-	set (DBUS_SHARED_HEADERS ${DBUS_SHARED_HEADERS} 
+	set (DBUS_SHARED_HEADERS ${DBUS_SHARED_HEADERS}
 		${DBUS_DIR}/dbus-server-unix.h
 		${DBUS_DIR}/dbus-transport-unix.h
 		${DBUS_DIR}/dbus-sysdeps-unix.h
@@ -236,7 +236,7 @@ set(libdbus_SOURCES
 	${DBUS_SHARED_SOURCES}
 )
 
-set(libdbus_HEADERS 
+set(libdbus_HEADERS
 	${DBUS_LIB_HEADERS}
 	${DBUS_SHARED_HEADERS}
 )

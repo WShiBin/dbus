@@ -33,72 +33,57 @@
 #error This file is only relevant for the embedded tests on Unix
 #endif
 
-static void die (const char *failure) _DBUS_GNUC_NORETURN;
+static void die(const char* failure) _DBUS_GNUC_NORETURN;
 
-static void
-die (const char *failure)
-{
-  fprintf (stderr, "Unit test failed: %s\n", failure);
-  exit (1);
+static void die(const char* failure) {
+    fprintf(stderr, "Unit test failed: %s\n", failure);
+    exit(1);
 }
 
-static void
-check_memleaks (const char *name)
-{
-  dbus_shutdown ();
+static void check_memleaks(const char* name) {
+    dbus_shutdown();
 
-  printf ("%s: checking for memleaks\n", name);
-  if (_dbus_get_malloc_blocks_outstanding () != 0)
-    {
-      _dbus_warn ("%d dbus_malloc blocks were not freed",
-                  _dbus_get_malloc_blocks_outstanding ());
-      die ("memleaks");
+    printf("%s: checking for memleaks\n", name);
+    if (_dbus_get_malloc_blocks_outstanding() != 0) {
+        _dbus_warn("%d dbus_malloc blocks were not freed", _dbus_get_malloc_blocks_outstanding());
+        die("memleaks");
     }
 }
 
-static void
-test_pre_hook (void)
-{
+static void test_pre_hook(void) {
 }
 
-static const char *progname = "";
-static void
-test_post_hook (void)
-{
-  check_memleaks (progname);
+static const char* progname = "";
+static void        test_post_hook(void) {
+    check_memleaks(progname);
 }
 
-int
-main (int argc, char **argv)
-{
-  const char *dir;
-  DBusString test_data_dir;
+int main(int argc, char** argv) {
+    const char* dir;
+    DBusString  test_data_dir;
 
-  progname = argv[0];
+    progname = argv[0];
 
-  if (argc > 1 && strcmp (argv[1], "--tap") != 0)
-    dir = argv[1];
-  else
-    dir = _dbus_getenv ("DBUS_TEST_DATA");
+    if (argc > 1 && strcmp(argv[1], "--tap") != 0)
+        dir = argv[1];
+    else
+        dir = _dbus_getenv("DBUS_TEST_DATA");
 
-  if (dir == NULL)
-    {
-      fprintf (stderr, "Must specify test data directory as argv[1] or in DBUS_TEST_DATA env variable\n");
-      return 1;
+    if (dir == NULL) {
+        fprintf(stderr, "Must specify test data directory as argv[1] or in DBUS_TEST_DATA env variable\n");
+        return 1;
     }
 
-  _dbus_string_init_const (&test_data_dir, dir);
+    _dbus_string_init_const(&test_data_dir, dir);
 
-  if (!_dbus_threads_init_debug ())
-    die ("initializing debug threads");
+    if (!_dbus_threads_init_debug()) die("initializing debug threads");
 
-  test_pre_hook ();
-  printf ("%s: Running config file parser (trivial) test\n", argv[0]);
-  if (!bus_config_parser_trivial_test (&test_data_dir))
-    die ("parser");
-  test_post_hook ();
+    test_pre_hook();
+    printf("%s: Running config file parser (trivial) test\n", argv[0]);
+    if (!bus_config_parser_trivial_test(&test_data_dir)) die("parser");
+    test_post_hook();
 
-  printf ("%s: Success\n", argv[0]);
+    printf("%s: Success\n", argv[0]);
 
-  return 0;
+    return 0;
 }

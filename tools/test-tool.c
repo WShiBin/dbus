@@ -31,58 +31,49 @@
 #include <dbus/dbus.h>
 
 static struct {
-    const char *name;
-    int (*callback) (int, char **);
+    const char* name;
+    int (*callback)(int, char**);
 } subcommands[] = {
-      { "black-hole", dbus_test_tool_black_hole },
-      { "echo",       dbus_test_tool_echo },
-      { "spam",       dbus_test_tool_spam },
-      { NULL, NULL }
-};
+    {"black-hole", dbus_test_tool_black_hole},
+    {"echo", dbus_test_tool_echo},
+    {"spam", dbus_test_tool_spam},
+    {NULL, NULL}};
 
-static void usage (int exit_with) _DBUS_GNUC_NORETURN;
+static void usage(int exit_with) _DBUS_GNUC_NORETURN;
 
-static void
-usage (int exit_with)
-{
-  int i;
+static void usage(int exit_with) {
+    int i;
 
-  fprintf (stderr,
-           "Usage: dbus-test-tool SUBCOMMAND [OPTIONS]\n"
-           "\n"
-           "Known SUBCOMMANDs are:\n"
-           "\n"
-           );
+    fprintf(
+        stderr,
+        "Usage: dbus-test-tool SUBCOMMAND [OPTIONS]\n"
+        "\n"
+        "Known SUBCOMMANDs are:\n"
+        "\n");
 
-  for (i = 0; subcommands[i].name != NULL; i++)
-    {
-      fprintf (stderr, "- %s\n", subcommands[i].name);
+    for (i = 0; subcommands[i].name != NULL; i++) {
+        fprintf(stderr, "- %s\n", subcommands[i].name);
     }
 
-  fprintf (stderr,
-           "\n"
-           "For more information: dbus-test-tool SUBCOMMAND --help\n"
-           );
+    fprintf(
+        stderr,
+        "\n"
+        "For more information: dbus-test-tool SUBCOMMAND --help\n");
 
-  exit (exit_with);
+    exit(exit_with);
 }
 
-int
-main (int argc, char **argv)
-{
-  int i;
+int main(int argc, char** argv) {
+    int i;
 
-  if (argc < 2)
-    {
-      usage (2);
+    if (argc < 2) {
+        usage(2);
     }
 
-  for (i = 0; subcommands[i].name != NULL; i++)
-    {
-      if (!strcmp (argv[1], subcommands[i].name))
-        return subcommands[i].callback (argc, argv);
+    for (i = 0; subcommands[i].name != NULL; i++) {
+        if (!strcmp(argv[1], subcommands[i].name)) return subcommands[i].callback(argc, argv);
     }
 
-  usage (2);
-  return 2;
+    usage(2);
+    return 2;
 }

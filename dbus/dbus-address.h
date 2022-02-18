@@ -4,7 +4,7 @@
  * Copyright (C) 2003  CodeFactory AB
  *
  * Licensed under the Academic Free License version 2.1
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,13 +14,13 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-#if !defined (DBUS_INSIDE_DBUS_H) && !defined (DBUS_COMPILATION)
+#if !defined(DBUS_INSIDE_DBUS_H) && !defined(DBUS_COMPILATION)
 #error "Only <dbus/dbus.h> can be included directly, this file may disappear or change contents."
 #endif
 
@@ -41,23 +41,18 @@ DBUS_BEGIN_DECLS
 typedef struct DBusAddressEntry DBusAddressEntry;
 
 DBUS_EXPORT
-dbus_bool_t dbus_parse_address            (const char         *address,
-					   DBusAddressEntry ***entry_result,
-					   int                *array_len,
-					   DBusError          *error);
+dbus_bool_t dbus_parse_address(const char* address, DBusAddressEntry*** entry_result, int* array_len, DBusError* error);
 DBUS_EXPORT
-const char *dbus_address_entry_get_value  (DBusAddressEntry   *entry,
-					   const char         *key);
+const char* dbus_address_entry_get_value(DBusAddressEntry* entry, const char* key);
 DBUS_EXPORT
-const char *dbus_address_entry_get_method (DBusAddressEntry   *entry);
+const char* dbus_address_entry_get_method(DBusAddressEntry* entry);
 DBUS_EXPORT
-void        dbus_address_entries_free     (DBusAddressEntry  **entries);
+void dbus_address_entries_free(DBusAddressEntry** entries);
 
 DBUS_EXPORT
-char* dbus_address_escape_value   (const char *value);
+char* dbus_address_escape_value(const char* value);
 DBUS_EXPORT
-char* dbus_address_unescape_value (const char *value,
-                                   DBusError  *error);
+char* dbus_address_unescape_value(const char* value, DBusError* error);
 
 /**
  * Clear a variable or struct member that contains an array of #DBusAddressEntry.
@@ -71,11 +66,8 @@ char* dbus_address_unescape_value (const char *value,
  * pointer_to_entries must not be #NULL, but *pointer_to_entries
  * may be #NULL.
  */
-static inline void
-dbus_clear_address_entries (DBusAddressEntry ***pointer_to_entries)
-{
-  _dbus_clear_pointer_impl (DBusAddressEntry *, pointer_to_entries,
-                            dbus_address_entries_free);
+static inline void dbus_clear_address_entries(DBusAddressEntry*** pointer_to_entries) {
+    _dbus_clear_pointer_impl(DBusAddressEntry*, pointer_to_entries, dbus_address_entries_free);
 }
 
 /** @} */
@@ -83,4 +75,3 @@ dbus_clear_address_entries (DBusAddressEntry ***pointer_to_entries)
 DBUS_END_DECLS
 
 #endif /* DBUS_ADDRESS_H */
-

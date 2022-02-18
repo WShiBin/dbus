@@ -37,104 +37,83 @@
 
 /* Return TRUE if the right thing happens, but the right thing might include
  * OOM. */
-static dbus_bool_t
-test_new_server (void *user_data)
-{
-  const char *listen_address = user_data;
-  DBusError error = DBUS_ERROR_INIT;
-  DBusServer *server = NULL;
-  dbus_bool_t result = FALSE;
+static dbus_bool_t test_new_server(void* user_data) {
+    const char* listen_address = user_data;
+    DBusError   error          = DBUS_ERROR_INIT;
+    DBusServer* server         = NULL;
+    dbus_bool_t result         = FALSE;
 
-  server = dbus_server_listen (listen_address, &error);
+    server = dbus_server_listen(listen_address, &error);
 
-  if (server == NULL)
-    goto out;
+    if (server == NULL) goto out;
 
-  result = TRUE;
+    result = TRUE;
 
 out:
-  if (result)
-    {
-      test_assert_no_error (&error);
-    }
-  else
-    {
-      g_assert_cmpstr (error.name, ==, DBUS_ERROR_NO_MEMORY);
-      result = TRUE;
+    if (result) {
+        test_assert_no_error(&error);
+    } else {
+        g_assert_cmpstr(error.name, ==, DBUS_ERROR_NO_MEMORY);
+        result = TRUE;
     }
 
-  if (server != NULL)
-    dbus_server_disconnect (server);
+    if (server != NULL) dbus_server_disconnect(server);
 
-  dbus_clear_server (&server);
-  dbus_error_free (&error);
+    dbus_clear_server(&server);
+    dbus_error_free(&error);
 
-  return result;
+    return result;
 }
 
-typedef struct
-{
-  const gchar *name;
-  DBusTestMemoryFunction function;
-  const void *data;
+typedef struct {
+    const gchar*           name;
+    DBusTestMemoryFunction function;
+    const void*            data;
 } OOMTestCase;
 
-static void
-test_oom_wrapper (gconstpointer data)
-{
-  const OOMTestCase *test = data;
+static void test_oom_wrapper(gconstpointer data) {
+    const OOMTestCase* test = data;
 
-  if ((g_str_has_prefix (test->data, "tcp:") ||
-       g_str_has_prefix (test->data, "nonce-tcp:")) &&
-      !test_check_tcp_works ())
-    return;
+    if ((g_str_has_prefix(test->data, "tcp:") || g_str_has_prefix(test->data, "nonce-tcp:")) && !test_check_tcp_works())
+        return;
 
-  if (!_dbus_test_oom_handling (test->name, test->function,
-                                (void *) test->data))
-    {
-      g_test_message ("OOM test failed");
-      g_test_fail ();
+    if (!_dbus_test_oom_handling(test->name, test->function, (void*)test->data)) {
+        g_test_message("OOM test failed");
+        g_test_fail();
     }
 }
 
-static GQueue *test_cases_to_free = NULL;
+static GQueue* test_cases_to_free = NULL;
 
-static void
-add_oom_test (const gchar *name,
-              DBusTestMemoryFunction function,
-              const void *data)
-{
-  /* By using GLib memory allocation here, we avoid being affected by
-   * dbus_shutdown() or contributing to
-   * _dbus_get_malloc_blocks_outstanding() */
-  OOMTestCase *test_case = g_new0 (OOMTestCase, 1);
+static void add_oom_test(const gchar* name, DBusTestMemoryFunction function, const void* data) {
+    /* By using GLib memory allocation here, we avoid being affected by
+     * dbus_shutdown() or contributing to
+     * _dbus_get_malloc_blocks_outstanding() */
+    OOMTestCase* test_case = g_new0(OOMTestCase, 1);
 
-  test_case->name = name;
-  test_case->function = function;
-  test_case->data = data;
-  g_test_add_data_func (name, test_case, test_oom_wrapper);
-  g_queue_push_tail (test_cases_to_free, test_case);
+    test_case->name     = name;
+    test_case->function = function;
+    test_case->data     = data;
+    g_test_add_data_func(name, test_case, test_oom_wrapper);
+    g_queue_push_tail(test_cases_to_free, test_case);
 }
 
-int
-main (int argc,
-      char **argv)
-{
-  int ret;
+int main(int argc, char** argv) {
+    int ret;
 
-  test_init (&argc, &argv);
+    test_init(&argc, &argv);
 
-  test_cases_to_free = g_queue_new ();
-  add_oom_test ("/server/new-tcp", test_new_server, "tcp:host=127.0.0.1,bind=127.0.0.1");
-  add_oom_test ("/server/new-nonce-tcp", test_new_server, "nonce-tcp:host=127.0.0.1,bind=127.0.0.1");
-  add_oom_test ("/server/new-tcp-star", test_new_server, "tcp:host=127.0.0.1,bind=*");
-  add_oom_test ("/server/new-tcp-v4", test_new_server, "tcp:host=127.0.0.1,bind=127.0.0.1,family=ipv4");
+    test_cases_to_free = g_queue_new();
+    add_oom_test("/server/new-tcp", test_new_server, "tcp:host=127.0.0.1,bind=127.0.0.1");
+    add_oom_test("/server/new-nonce-tcp", test_new_server, "nonce-tcp:host=127.0.0.1,bind=127.0.0.1");
+    add_oom_test("/server/new-tcp-star", test_new_server, "tcp:host=127.0.0.1,bind=*");
+    add_oom_test("/server/new-tcp-v4", test_new_server, "tcp:host=127.0.0.1,bind=127.0.0.1,family=ipv4");
 #ifdef DBUS_UNIX
-  add_oom_test ("/server/unix", test_new_server, "unix:tmpdir=/tmp");
+    add_oom_test("/server/unix", test_new_server, "unix:tmpdir=/tmp");
 #endif
 
-  ret = g_test_run ();
+    ret = g_test_run();
 
-  g_queue_free_full (test_cases_to_free, g_free);
-  return ret;
+    g_queue_free_full(test_cases_to_free, g_free);
+    return ret;
 }

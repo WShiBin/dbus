@@ -50,3 +50,5 @@ tags
 /lcov.info.tmp
 /tap-driver.sh
 /test-driver
+
+/build

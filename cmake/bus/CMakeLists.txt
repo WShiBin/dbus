@@ -3,7 +3,7 @@ add_definitions(-DDBUS_COMPILATION)
 SET(EFENCE "")
 SET(BUS_DIR ${CMAKE_SOURCE_DIR}/../bus)
 
-# config files for installation 
+# config files for installation
 CONFIGURE_FILE( "${BUS_DIR}/session.conf.in" "${CMAKE_CURRENT_BINARY_DIR}/session.conf" IMMEDIATE @ONLY)
 CONFIGURE_FILE( "${BUS_DIR}/legacy-config/session.conf.in" "${CMAKE_CURRENT_BINARY_DIR}/legacy-config/session.conf" IMMEDIATE @ONLY)
 FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/session.d)
@@ -17,7 +17,7 @@ endif()
 # copy services for local daemon start to local service dir data/dbus-1/services
 SET (SERVICE_FILES test/data/valid-service-files)
 FILE(GLOB FILES "${CMAKE_SOURCE_DIR}/../${SERVICE_FILES}/*.service.in" )
-FOREACH(FILE ${FILES})	
+FOREACH(FILE ${FILES})
 	GET_FILENAME_COMPONENT(FILENAME ${FILE} NAME_WE)
 	SET (TARGET ${CMAKE_BINARY_DIR}/data/dbus-1/services/${FILENAME}.service)
 	IF (CONFIG_VERBOSE)
@@ -35,44 +35,44 @@ else (DBUS_BUS_ENABLE_INOTIFY)
     set (DIR_WATCH_SOURCE ${BUS_DIR}/dir-watch-default.c)
 endif (DBUS_BUS_ENABLE_INOTIFY)
 
-set (BUS_SOURCES 
-	${BUS_DIR}/activation.c				
-	${BUS_DIR}/activation.h				
+set (BUS_SOURCES
+	${BUS_DIR}/activation.c
+	${BUS_DIR}/activation.h
 	${BUS_DIR}/apparmor.c
 	${BUS_DIR}/apparmor.h
 	${BUS_DIR}/audit.c
 	${BUS_DIR}/audit.h
-	${BUS_DIR}/bus.c					
-	${BUS_DIR}/bus.h					
+	${BUS_DIR}/bus.c
+	${BUS_DIR}/bus.h
 	${BUS_DIR}/config-loader-expat.c
-	${BUS_DIR}/config-parser.c				
+	${BUS_DIR}/config-parser.c
 	${BUS_DIR}/config-parser.h
 	${BUS_DIR}/config-parser-common.c
 	${BUS_DIR}/config-parser-common.h
 #    ${BUS_DIR}/config-parser-trivial.c
 	${BUS_DIR}/connection.c
-	${BUS_DIR}/connection.h				
-	${BUS_DIR}/desktop-file.c				
-	${BUS_DIR}/desktop-file.h				
-	${BUS_DIR}/dir-watch.h				
-	${BUS_DIR}/dispatch.c				
-	${BUS_DIR}/dispatch.h				
-	${BUS_DIR}/driver.c				
-	${BUS_DIR}/driver.h				
-	${BUS_DIR}/expirelist.c				
-	${BUS_DIR}/expirelist.h				
-	${BUS_DIR}/policy.c				
-	${BUS_DIR}/policy.h				
-	${BUS_DIR}/selinux.h				
-	${BUS_DIR}/selinux.c				
-	${BUS_DIR}/services.c				
-	${BUS_DIR}/services.h				
-	${BUS_DIR}/signals.c				
-	${BUS_DIR}/signals.h				
-	${BUS_DIR}/test.c					
-	${BUS_DIR}/test.h					
-	${BUS_DIR}/utils.c					
-	${BUS_DIR}/utils.h					
+	${BUS_DIR}/connection.h
+	${BUS_DIR}/desktop-file.c
+	${BUS_DIR}/desktop-file.h
+	${BUS_DIR}/dir-watch.h
+	${BUS_DIR}/dispatch.c
+	${BUS_DIR}/dispatch.h
+	${BUS_DIR}/driver.c
+	${BUS_DIR}/driver.h
+	${BUS_DIR}/expirelist.c
+	${BUS_DIR}/expirelist.h
+	${BUS_DIR}/policy.c
+	${BUS_DIR}/policy.h
+	${BUS_DIR}/selinux.h
+	${BUS_DIR}/selinux.c
+	${BUS_DIR}/services.c
+	${BUS_DIR}/services.h
+	${BUS_DIR}/signals.c
+	${BUS_DIR}/signals.h
+	${BUS_DIR}/test.c
+	${BUS_DIR}/test.h
+	${BUS_DIR}/utils.c
+	${BUS_DIR}/utils.h
 	${DIR_WATCH_SOURCE}
 )
 if(DBUS_ENABLE_STATS)
@@ -108,11 +108,11 @@ if(NOT WIN32)
 endif()
 
 if (DBUS_SERVICE)
-	set (dbus_service_SOURCES 
+	set (dbus_service_SOURCES
 		${BUS_DIR}/bus-service-win.c
 	# TODO: add additional files
 	#	${BUS_DIR}/service-main.c
-	#	${BUS_SOURCES} 
+	#	${BUS_SOURCES}
 	)
 
 	add_executable(dbus-service ${dbus_service_SOURCES} )
@@ -184,7 +184,7 @@ endif(MSVC)
 
 #initddir=$(sysconfdir)/rc.d/init.d
 
-#initd_SCRIPTS= 	
+#initd_SCRIPTS=
 #	messagebus
 
 #endif
@@ -195,7 +195,7 @@ endif(MSVC)
 
 #initddir=$(sysconfdir)/rc.d/
 
-#initd_SCRIPTS= 	
+#initd_SCRIPTS=
 #	rc.messagebus
 
 #endif
@@ -204,6 +204,6 @@ endif(MSVC)
 #MAN_IN_FILES=dbus-daemon.1.in
 #man_MANS = dbus-daemon.1
 
-#### Extra dist 
+#### Extra dist
 
 #EXTRA_DIST=$(CONFIG_IN_FILES) $(SCRIPT_IN_FILES) $(man_MANS) $(MAN_IN_FILES)

@@ -5,7 +5,7 @@
  * Copyright (C) 2003  Red Hat, Inc.
  *
  * Licensed under the Academic Free License version 2.1
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -15,7 +15,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -52,7 +52,7 @@
  * This module is the only one in libdbus that's specific to
  * communicating with the message bus daemon. The rest of the API can
  * also be used for connecting to another application directly.
- * 
+ *
  * @todo right now the default address of the system bus is hardcoded,
  * so if you change it in the global config file suddenly you have to
  * set DBUS_SYSTEM_BUS_ADDRESS env variable.  Might be nice if the
@@ -74,12 +74,11 @@
  * #DBusConnection used with these convenience functions.
  *
  */
-typedef struct
-{
-  DBusConnection *connection; /**< Connection we're associated with */
-  char *unique_name; /**< Unique name of this connection */
+typedef struct {
+    DBusConnection* connection;  /**< Connection we're associated with */
+    char*           unique_name; /**< Unique name of this connection */
 
-  unsigned int is_well_known : 1; /**< Is one of the well-known connections in our global array */
+    unsigned int is_well_known : 1; /**< Is one of the well-known connections in our global array */
 } BusData;
 
 /** The slot we have reserved to store BusData.
@@ -89,292 +88,235 @@ static dbus_int32_t bus_data_slot = -1;
 /** Number of bus types */
 #define N_BUS_TYPES 3
 
-static DBusConnection *bus_connections[N_BUS_TYPES];
-static char *bus_connection_addresses[N_BUS_TYPES] = { NULL, NULL, NULL };
+static DBusConnection* bus_connections[N_BUS_TYPES];
+static char*           bus_connection_addresses[N_BUS_TYPES] = {NULL, NULL, NULL};
 
 static DBusBusType activation_bus_type = DBUS_BUS_STARTER;
 
 static dbus_bool_t initialized = FALSE;
 
-static void
-addresses_shutdown_func (void *data)
-{
-  int i;
+static void addresses_shutdown_func(void* data) {
+    int i;
 
-  i = 0;
-  while (i < N_BUS_TYPES)
-    {
-      if (bus_connections[i] != NULL)
-        _dbus_warn_check_failed ("dbus_shutdown() called but connections were still live. This probably means the application did not drop all its references to bus connections.");
-      
-      dbus_free (bus_connection_addresses[i]);
-      bus_connection_addresses[i] = NULL;
-      ++i;
+    i = 0;
+    while (i < N_BUS_TYPES) {
+        if (bus_connections[i] != NULL)
+            _dbus_warn_check_failed(
+                "dbus_shutdown() called but connections were still live. This probably means the application did not "
+                "drop all its references to bus connections.");
+
+        dbus_free(bus_connection_addresses[i]);
+        bus_connection_addresses[i] = NULL;
+        ++i;
     }
 
-  activation_bus_type = DBUS_BUS_STARTER;
+    activation_bus_type = DBUS_BUS_STARTER;
 
-  initialized = FALSE;
+    initialized = FALSE;
 }
 
-static dbus_bool_t
-get_from_env (char           **connection_p,
-              const char      *env_var)
-{
-  const char *s;
-  
-  _dbus_assert (*connection_p == NULL);
-  
-  s = _dbus_getenv (env_var);
-  if (s == NULL || *s == '\0')
-    return TRUE; /* successfully didn't use the env var */
-  else
-    {
-      *connection_p = _dbus_strdup (s);
-      return *connection_p != NULL;
+static dbus_bool_t get_from_env(char** connection_p, const char* env_var) {
+    const char* s;
+
+    _dbus_assert(*connection_p == NULL);
+
+    s = _dbus_getenv(env_var);
+    if (s == NULL || *s == '\0')
+        return TRUE; /* successfully didn't use the env var */
+    else {
+        *connection_p = _dbus_strdup(s);
+        return *connection_p != NULL;
     }
 }
 
-static dbus_bool_t
-init_session_address (void)
-{
-  dbus_bool_t retval;
- 
-  retval = FALSE;
+static dbus_bool_t init_session_address(void) {
+    dbus_bool_t retval;
 
-  /* First, look in the environment.  This is the normal case on 
-   * freedesktop.org/Unix systems. */
-  get_from_env (&bus_connection_addresses[DBUS_BUS_SESSION],
-                     "DBUS_SESSION_BUS_ADDRESS");
-  if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL)
-    {
-      dbus_bool_t supported;
-      DBusString addr;
-      DBusError error = DBUS_ERROR_INIT;
+    retval = FALSE;
 
-      if (!_dbus_string_init (&addr))
-        return FALSE;
+    /* First, look in the environment.  This is the normal case on
+     * freedesktop.org/Unix systems. */
+    get_from_env(&bus_connection_addresses[DBUS_BUS_SESSION], "DBUS_SESSION_BUS_ADDRESS");
+    if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL) {
+        dbus_bool_t supported;
+        DBusString  addr;
+        DBusError   error = DBUS_ERROR_INIT;
 
-      supported = FALSE;
-      /* So it's not in the environment - let's try a platform-specific method.
-       * On MacOS, this involves asking launchd.  On Windows (not specified yet)
-       * we might do a COM lookup.
-       * Ignore errors - if we failed, fall back to autolaunch. */
-      retval = _dbus_lookup_session_address (&supported, &addr, &error);
-      if (supported && retval)
-        {
-          retval =_dbus_string_steal_data (&addr, &bus_connection_addresses[DBUS_BUS_SESSION]);
+        if (!_dbus_string_init(&addr)) return FALSE;
+
+        supported = FALSE;
+        /* So it's not in the environment - let's try a platform-specific method.
+         * On MacOS, this involves asking launchd.  On Windows (not specified yet)
+         * we might do a COM lookup.
+         * Ignore errors - if we failed, fall back to autolaunch. */
+        retval = _dbus_lookup_session_address(&supported, &addr, &error);
+        if (supported && retval) {
+            retval = _dbus_string_steal_data(&addr, &bus_connection_addresses[DBUS_BUS_SESSION]);
+        } else if (supported && !retval) {
+            if (dbus_error_is_set(&error))
+                _dbus_warn("Dynamic session lookup supported but failed: %s", error.message);
+            else
+                _dbus_warn("Dynamic session lookup supported but failed silently");
         }
-      else if (supported && !retval)
-        {
-          if (dbus_error_is_set(&error))
-            _dbus_warn ("Dynamic session lookup supported but failed: %s", error.message);
-          else
-            _dbus_warn ("Dynamic session lookup supported but failed silently");
-        }
-      _dbus_string_free (&addr);
-    }
-  else
-    retval = TRUE;
+        _dbus_string_free(&addr);
+    } else
+        retval = TRUE;
 
-  if (!retval)
-    return FALSE;
+    if (!retval) return FALSE;
 
-  /* We have a hard-coded (but compile-time-configurable) fallback address for
-   * the session bus. */
-  if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL)
-    bus_connection_addresses[DBUS_BUS_SESSION] =
-      _dbus_strdup (DBUS_SESSION_BUS_CONNECT_ADDRESS);
+    /* We have a hard-coded (but compile-time-configurable) fallback address for
+     * the session bus. */
+    if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL)
+        bus_connection_addresses[DBUS_BUS_SESSION] = _dbus_strdup(DBUS_SESSION_BUS_CONNECT_ADDRESS);
 
-  if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL)
-    return FALSE;
+    if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL) return FALSE;
 
-  return TRUE;
+    return TRUE;
 }
 
-static dbus_bool_t
-init_connections_unlocked (void)
-{
-  if (!initialized)
-    {
-      const char *s;
-      int i;
+static dbus_bool_t init_connections_unlocked(void) {
+    if (!initialized) {
+        const char* s;
+        int         i;
 
-      i = 0;
-      while (i < N_BUS_TYPES)
-        {
-          bus_connections[i] = NULL;
-          ++i;
-        }
-
-      /* Don't init these twice, we may run this code twice if
-       * init_connections_unlocked() fails midway through.
-       * In practice, each block below should contain only one
-       * "return FALSE" or running through twice may not
-       * work right.
-       */
-      
-       if (bus_connection_addresses[DBUS_BUS_SYSTEM] == NULL)
-         {
-           _dbus_verbose ("Filling in system bus address...\n");
-           
-           if (!get_from_env (&bus_connection_addresses[DBUS_BUS_SYSTEM],
-                              "DBUS_SYSTEM_BUS_ADDRESS"))
-             return FALSE;
-         }
-
-                  
-       if (bus_connection_addresses[DBUS_BUS_SYSTEM] == NULL)
-         {
-           /* Use default system bus address if none set in environment */
-           bus_connection_addresses[DBUS_BUS_SYSTEM] =
-             _dbus_strdup (DBUS_SYSTEM_BUS_DEFAULT_ADDRESS);
-
-           if (bus_connection_addresses[DBUS_BUS_SYSTEM] == NULL)
-             return FALSE;
-           
-           _dbus_verbose ("  used default system bus \"%s\"\n",
-                          bus_connection_addresses[DBUS_BUS_SYSTEM]);
-         }
-       else
-         _dbus_verbose ("  used env var system bus \"%s\"\n",
-                        bus_connection_addresses[DBUS_BUS_SYSTEM]);
-          
-      if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL)
-        {
-          _dbus_verbose ("Filling in session bus address...\n");
-          
-          if (!init_session_address ())
-            return FALSE;
-
-          _dbus_verbose ("  \"%s\"\n", bus_connection_addresses[DBUS_BUS_SESSION] ?
-                         bus_connection_addresses[DBUS_BUS_SESSION] : "none set");
-        }
-
-      if (bus_connection_addresses[DBUS_BUS_STARTER] == NULL)
-        {
-          _dbus_verbose ("Filling in activation bus address...\n");
-          
-          if (!get_from_env (&bus_connection_addresses[DBUS_BUS_STARTER],
-                             "DBUS_STARTER_ADDRESS"))
-            return FALSE;
-          
-          _dbus_verbose ("  \"%s\"\n", bus_connection_addresses[DBUS_BUS_STARTER] ?
-                         bus_connection_addresses[DBUS_BUS_STARTER] : "none set");
-        }
-
-
-      if (bus_connection_addresses[DBUS_BUS_STARTER] != NULL)
-        {
-          s = _dbus_getenv ("DBUS_STARTER_BUS_TYPE");
-              
-          if (s != NULL)
-            {
-              _dbus_verbose ("Bus activation type was set to \"%s\"\n", s);
-                  
-              if (strcmp (s, "system") == 0)
-                activation_bus_type = DBUS_BUS_SYSTEM;
-              else if (strcmp (s, "session") == 0)
-                activation_bus_type = DBUS_BUS_SESSION;
-            }
-        }
-      else
-        {
-          /* Default to the session bus instead if available */
-          if (bus_connection_addresses[DBUS_BUS_SESSION] != NULL)
-            {
-              bus_connection_addresses[DBUS_BUS_STARTER] =
-                _dbus_strdup (bus_connection_addresses[DBUS_BUS_SESSION]);
-              if (bus_connection_addresses[DBUS_BUS_STARTER] == NULL)
-                return FALSE;
-            }
-        }
-      
-      /* If we return FALSE we have to be sure that restarting
-       * the above code will work right
-       */
-      
-      if (!_dbus_register_shutdown_func (addresses_shutdown_func,
-                                         NULL))
-        return FALSE;
-      
-      initialized = TRUE;
-    }
-
-  return initialized;
-}
-
-static void
-bus_data_free (void *data)
-{
-  BusData *bd = data;
-  
-  if (bd->is_well_known)
-    {
-      int i;
-
-      if (!_DBUS_LOCK (bus))
-        _dbus_assert_not_reached ("global locks should have been initialized "
-            "when we attached bus data");
-
-      /* We may be stored in more than one slot */
-      /* This should now be impossible - these slots are supposed to
-       * be cleared on disconnect, so should not need to be cleared on
-       * finalize
-       */
-      i = 0;
-      while (i < N_BUS_TYPES)
-        {
-          if (bus_connections[i] == bd->connection)
+        i = 0;
+        while (i < N_BUS_TYPES) {
             bus_connections[i] = NULL;
-          
-          ++i;
+            ++i;
         }
-      _DBUS_UNLOCK (bus);
-    }
-  
-  dbus_free (bd->unique_name);
-  dbus_free (bd);
 
-  dbus_connection_free_data_slot (&bus_data_slot);
+        /* Don't init these twice, we may run this code twice if
+         * init_connections_unlocked() fails midway through.
+         * In practice, each block below should contain only one
+         * "return FALSE" or running through twice may not
+         * work right.
+         */
+
+        if (bus_connection_addresses[DBUS_BUS_SYSTEM] == NULL) {
+            _dbus_verbose("Filling in system bus address...\n");
+
+            if (!get_from_env(&bus_connection_addresses[DBUS_BUS_SYSTEM], "DBUS_SYSTEM_BUS_ADDRESS")) return FALSE;
+        }
+
+        if (bus_connection_addresses[DBUS_BUS_SYSTEM] == NULL) {
+            /* Use default system bus address if none set in environment */
+            bus_connection_addresses[DBUS_BUS_SYSTEM] = _dbus_strdup(DBUS_SYSTEM_BUS_DEFAULT_ADDRESS);
+
+            if (bus_connection_addresses[DBUS_BUS_SYSTEM] == NULL) return FALSE;
+
+            _dbus_verbose("  used default system bus \"%s\"\n", bus_connection_addresses[DBUS_BUS_SYSTEM]);
+        } else
+            _dbus_verbose("  used env var system bus \"%s\"\n", bus_connection_addresses[DBUS_BUS_SYSTEM]);
+
+        if (bus_connection_addresses[DBUS_BUS_SESSION] == NULL) {
+            _dbus_verbose("Filling in session bus address...\n");
+
+            if (!init_session_address()) return FALSE;
+
+            _dbus_verbose(
+                "  \"%s\"\n",
+                bus_connection_addresses[DBUS_BUS_SESSION] ? bus_connection_addresses[DBUS_BUS_SESSION] : "none set");
+        }
+
+        if (bus_connection_addresses[DBUS_BUS_STARTER] == NULL) {
+            _dbus_verbose("Filling in activation bus address...\n");
+
+            if (!get_from_env(&bus_connection_addresses[DBUS_BUS_STARTER], "DBUS_STARTER_ADDRESS")) return FALSE;
+
+            _dbus_verbose(
+                "  \"%s\"\n",
+                bus_connection_addresses[DBUS_BUS_STARTER] ? bus_connection_addresses[DBUS_BUS_STARTER] : "none set");
+        }
+
+        if (bus_connection_addresses[DBUS_BUS_STARTER] != NULL) {
+            s = _dbus_getenv("DBUS_STARTER_BUS_TYPE");
+
+            if (s != NULL) {
+                _dbus_verbose("Bus activation type was set to \"%s\"\n", s);
+
+                if (strcmp(s, "system") == 0)
+                    activation_bus_type = DBUS_BUS_SYSTEM;
+                else if (strcmp(s, "session") == 0)
+                    activation_bus_type = DBUS_BUS_SESSION;
+            }
+        } else {
+            /* Default to the session bus instead if available */
+            if (bus_connection_addresses[DBUS_BUS_SESSION] != NULL) {
+                bus_connection_addresses[DBUS_BUS_STARTER] = _dbus_strdup(bus_connection_addresses[DBUS_BUS_SESSION]);
+                if (bus_connection_addresses[DBUS_BUS_STARTER] == NULL) return FALSE;
+            }
+        }
+
+        /* If we return FALSE we have to be sure that restarting
+         * the above code will work right
+         */
+
+        if (!_dbus_register_shutdown_func(addresses_shutdown_func, NULL)) return FALSE;
+
+        initialized = TRUE;
+    }
+
+    return initialized;
 }
 
-static BusData*
-ensure_bus_data (DBusConnection *connection)
-{
-  BusData *bd;
+static void bus_data_free(void* data) {
+    BusData* bd = data;
 
-  if (!dbus_connection_allocate_data_slot (&bus_data_slot))
-    return NULL;
+    if (bd->is_well_known) {
+        int i;
 
-  bd = dbus_connection_get_data (connection, bus_data_slot);
-  if (bd == NULL)
-    {      
-      bd = dbus_new0 (BusData, 1);
-      if (bd == NULL)
-        {
-          dbus_connection_free_data_slot (&bus_data_slot);
-          return NULL;
+        if (!_DBUS_LOCK(bus))
+            _dbus_assert_not_reached(
+                "global locks should have been initialized "
+                "when we attached bus data");
+
+        /* We may be stored in more than one slot */
+        /* This should now be impossible - these slots are supposed to
+         * be cleared on disconnect, so should not need to be cleared on
+         * finalize
+         */
+        i = 0;
+        while (i < N_BUS_TYPES) {
+            if (bus_connections[i] == bd->connection) bus_connections[i] = NULL;
+
+            ++i;
         }
-
-      bd->connection = connection;
-      
-      if (!dbus_connection_set_data (connection, bus_data_slot, bd,
-                                     bus_data_free))
-        {
-          dbus_free (bd);
-          dbus_connection_free_data_slot (&bus_data_slot);
-          return NULL;
-        }
-
-      /* Data slot refcount now held by the BusData */
-    }
-  else
-    {
-      dbus_connection_free_data_slot (&bus_data_slot);
+        _DBUS_UNLOCK(bus);
     }
 
-  return bd;
+    dbus_free(bd->unique_name);
+    dbus_free(bd);
+
+    dbus_connection_free_data_slot(&bus_data_slot);
+}
+
+static BusData* ensure_bus_data(DBusConnection* connection) {
+    BusData* bd;
+
+    if (!dbus_connection_allocate_data_slot(&bus_data_slot)) return NULL;
+
+    bd = dbus_connection_get_data(connection, bus_data_slot);
+    if (bd == NULL) {
+        bd = dbus_new0(BusData, 1);
+        if (bd == NULL) {
+            dbus_connection_free_data_slot(&bus_data_slot);
+            return NULL;
+        }
+
+        bd->connection = connection;
+
+        if (!dbus_connection_set_data(connection, bus_data_slot, bd, bus_data_free)) {
+            dbus_free(bd);
+            dbus_connection_free_data_slot(&bus_data_slot);
+            return NULL;
+        }
+
+        /* Data slot refcount now held by the BusData */
+    } else {
+        dbus_connection_free_data_slot(&bus_data_slot);
+    }
+
+    return bd;
 }
 
 /**
@@ -383,144 +325,125 @@ ensure_bus_data (DBusConnection *connection)
  *
  * @param connection a connection that has been disconnected.
  */
-void
-_dbus_bus_notify_shared_connection_disconnected_unlocked (DBusConnection *connection)
-{
-  int i;
+void _dbus_bus_notify_shared_connection_disconnected_unlocked(DBusConnection* connection) {
+    int i;
 
-  if (!_DBUS_LOCK (bus))
-    {
-      /* If it was in bus_connections, we would have initialized global locks
-       * when we added it. So, it can't be. */
-      return;
+    if (!_DBUS_LOCK(bus)) {
+        /* If it was in bus_connections, we would have initialized global locks
+         * when we added it. So, it can't be. */
+        return;
     }
 
-  /* We are expecting to have the connection saved in only one of these
-   * slots, but someone could in a pathological case set system and session
-   * bus to the same bus or something. Or set one of them to the starter
-   * bus without setting the starter bus type in the env variable.
-   * So we don't break the loop as soon as we find a match.
-   */
-  for (i = 0; i < N_BUS_TYPES; ++i)
-    {
-      if (bus_connections[i] == connection)
-        {
-          bus_connections[i] = NULL;
+    /* We are expecting to have the connection saved in only one of these
+     * slots, but someone could in a pathological case set system and session
+     * bus to the same bus or something. Or set one of them to the starter
+     * bus without setting the starter bus type in the env variable.
+     * So we don't break the loop as soon as we find a match.
+     */
+    for (i = 0; i < N_BUS_TYPES; ++i) {
+        if (bus_connections[i] == connection) {
+            bus_connections[i] = NULL;
         }
     }
 
-  _DBUS_UNLOCK (bus);
+    _DBUS_UNLOCK(bus);
 }
 
-static DBusConnection *
-internal_bus_get (DBusBusType  type,
-                  dbus_bool_t  private,
-                  DBusError   *error)
-{
-  const char *address;
-  DBusConnection *connection;
-  BusData *bd;
-  DBusBusType address_type;
+static DBusConnection* internal_bus_get(DBusBusType type, dbus_bool_t private, DBusError* error) {
+    const char*     address;
+    DBusConnection* connection;
+    BusData*        bd;
+    DBusBusType     address_type;
 
-  _dbus_return_val_if_fail (type >= 0 && type < N_BUS_TYPES, NULL);
-  _dbus_return_val_if_error_is_set (error, NULL);
+    _dbus_return_val_if_fail(type >= 0 && type < N_BUS_TYPES, NULL);
+    _dbus_return_val_if_error_is_set(error, NULL);
 
-  connection = NULL;
+    connection = NULL;
 
-  if (!_DBUS_LOCK (bus))
-    {
-      _DBUS_SET_OOM (error);
-      /* do not "goto out", that would try to unlock */
-      return NULL;
+    if (!_DBUS_LOCK(bus)) {
+        _DBUS_SET_OOM(error);
+        /* do not "goto out", that would try to unlock */
+        return NULL;
     }
 
-  if (!init_connections_unlocked ())
-    {
-      _DBUS_SET_OOM (error);
-      goto out;
+    if (!init_connections_unlocked()) {
+        _DBUS_SET_OOM(error);
+        goto out;
     }
 
-  /* We want to use the activation address even if the
-   * activating bus is the session or system bus,
-   * per the spec.
-   */
-  address_type = type;
-  
-  /* Use the real type of the activation bus for getting its
-   * connection, but only if the real type's address is available. (If
-   * the activating bus isn't a well-known bus then
-   * activation_bus_type == DBUS_BUS_STARTER)
-   */
-  if (type == DBUS_BUS_STARTER &&
-      bus_connection_addresses[activation_bus_type] != NULL)
-    type = activation_bus_type;
-  
-  if (!private && bus_connections[type] != NULL)
-    {
-      connection = bus_connections[type];
-      dbus_connection_ref (connection);
-      goto out;
+    /* We want to use the activation address even if the
+     * activating bus is the session or system bus,
+     * per the spec.
+     */
+    address_type = type;
+
+    /* Use the real type of the activation bus for getting its
+     * connection, but only if the real type's address is available. (If
+     * the activating bus isn't a well-known bus then
+     * activation_bus_type == DBUS_BUS_STARTER)
+     */
+    if (type == DBUS_BUS_STARTER && bus_connection_addresses[activation_bus_type] != NULL) type = activation_bus_type;
+
+    if (!private && bus_connections[type] != NULL) {
+        connection = bus_connections[type];
+        dbus_connection_ref(connection);
+        goto out;
     }
 
-  address = bus_connection_addresses[address_type];
-  if (address == NULL)
-    {
-      dbus_set_error (error, DBUS_ERROR_FAILED,
-                      "Unable to determine the address of the message bus (try 'man dbus-launch' and 'man dbus-daemon' for help)");
-      goto out;
+    address = bus_connection_addresses[address_type];
+    if (address == NULL) {
+        dbus_set_error(
+            error,
+            DBUS_ERROR_FAILED,
+            "Unable to determine the address of the message bus (try 'man dbus-launch' and 'man dbus-daemon' for "
+            "help)");
+        goto out;
     }
 
-  if (private)
-    connection = dbus_connection_open_private (address, error);
-  else
-    connection = dbus_connection_open (address, error);
-  
-  if (!connection)
-    {
-      goto out;
+    if (private)
+        connection = dbus_connection_open_private(address, error);
+    else
+        connection = dbus_connection_open(address, error);
+
+    if (!connection) {
+        goto out;
     }
 
-  if (!dbus_bus_register (connection, error))
-    {
-      _dbus_connection_close_possibly_shared (connection);
-      dbus_connection_unref (connection);
-      connection = NULL;
-      goto out;
+    if (!dbus_bus_register(connection, error)) {
+        _dbus_connection_close_possibly_shared(connection);
+        dbus_connection_unref(connection);
+        connection = NULL;
+        goto out;
     }
 
-  if (!private)
-    {
-      /* store a weak ref to the connection (dbus-connection.c is
-       * supposed to have a strong ref that it drops on disconnect,
-       * since this is a shared connection)
-       */
-      bus_connections[type] = connection;
+    if (!private) {
+        /* store a weak ref to the connection (dbus-connection.c is
+         * supposed to have a strong ref that it drops on disconnect,
+         * since this is a shared connection)
+         */
+        bus_connections[type] = connection;
     }
 
-  /* By default we're bound to the lifecycle of
-   * the message bus.
-   */
-  dbus_connection_set_exit_on_disconnect (connection,
-                                          TRUE);
+    /* By default we're bound to the lifecycle of
+     * the message bus.
+     */
+    dbus_connection_set_exit_on_disconnect(connection, TRUE);
 
-  if (!_DBUS_LOCK (bus_datas))
-    _dbus_assert_not_reached ("global locks were initialized already");
+    if (!_DBUS_LOCK(bus_datas)) _dbus_assert_not_reached("global locks were initialized already");
 
-  bd = ensure_bus_data (connection);
-  _dbus_assert (bd != NULL); /* it should have been created on
-                                register, so OOM not possible */
-  bd->is_well_known = TRUE;
-  _DBUS_UNLOCK (bus_datas);
+    bd = ensure_bus_data(connection);
+    _dbus_assert(bd != NULL); /* it should have been created on
+                                 register, so OOM not possible */
+    bd->is_well_known = TRUE;
+    _DBUS_UNLOCK(bus_datas);
 
 out:
-  /* Return a reference to the caller, or NULL with error set. */
-  if (connection == NULL)
-    _DBUS_ASSERT_ERROR_IS_SET (error);
+    /* Return a reference to the caller, or NULL with error set. */
+    if (connection == NULL) _DBUS_ASSERT_ERROR_IS_SET(error);
 
-  _DBUS_UNLOCK (bus);
-  return connection;
+    _DBUS_UNLOCK(bus);
+    return connection;
 }
-
 
 /** @} */ /* end of implementation details docs */
 
@@ -546,19 +469,16 @@ out:
  * after you get the connection.
  *
  * dbus_bus_get() calls dbus_bus_register() for you.
- * 
+ *
  * If returning a newly-created connection, this function will block
  * until authentication and bus registration are complete.
- * 
+ *
  * @param type bus type
  * @param error address where an error can be returned.
  * @returns a #DBusConnection with new ref or #NULL on error
  */
-DBusConnection *
-dbus_bus_get (DBusBusType  type,
-	      DBusError   *error)
-{
-  return internal_bus_get (type, FALSE, error);
+DBusConnection* dbus_bus_get(DBusBusType type, DBusError* error) {
+    return internal_bus_get(type, FALSE, error);
 }
 
 /**
@@ -586,11 +506,8 @@ dbus_bus_get (DBusBusType  type,
  * @param error address where an error can be returned.
  * @returns a DBusConnection with new ref
  */
-DBusConnection *
-dbus_bus_get_private (DBusBusType  type,
-                      DBusError   *error)
-{
-  return internal_bus_get (type, TRUE, error);
+DBusConnection* dbus_bus_get_private(DBusBusType type, DBusError* error) {
+    return internal_bus_get(type, TRUE, error);
 }
 
 /**
@@ -607,7 +524,7 @@ dbus_bus_get_private (DBusBusType  type,
  *
  * If you use dbus_bus_get() or dbus_bus_get_private() this
  * function will be called for you.
- * 
+ *
  * @note Just use dbus_bus_get() or dbus_bus_get_private() instead of
  * dbus_bus_register() and save yourself some pain. Using
  * dbus_bus_register() manually is only useful if you have your
@@ -637,96 +554,80 @@ dbus_bus_get_private (DBusBusType  type,
  * of using dbus_bus_register(), as long as you check
  * dbus_bus_get_unique_name() to see if a unique name has already been
  * stored by another thread before you send the registration messages.
- * 
+ *
  * @param connection the connection
  * @param error place to store errors
  * @returns #TRUE on success
  */
-dbus_bool_t
-dbus_bus_register (DBusConnection *connection,
-                   DBusError      *error)
-{
-  DBusMessage *message, *reply;
-  char *name;
-  BusData *bd;
-  dbus_bool_t retval;
+dbus_bool_t dbus_bus_register(DBusConnection* connection, DBusError* error) {
+    DBusMessage *message, *reply;
+    char*        name;
+    BusData*     bd;
+    dbus_bool_t  retval;
 
-  _dbus_return_val_if_fail (connection != NULL, FALSE);
-  _dbus_return_val_if_error_is_set (error, FALSE);
+    _dbus_return_val_if_fail(connection != NULL, FALSE);
+    _dbus_return_val_if_error_is_set(error, FALSE);
 
-  retval = FALSE;
-  message = NULL;
-  reply = NULL;
+    retval  = FALSE;
+    message = NULL;
+    reply   = NULL;
 
-  if (!_DBUS_LOCK (bus_datas))
-    {
-      _DBUS_SET_OOM (error);
-      /* do not "goto out", that would try to unlock */
-      return FALSE;
+    if (!_DBUS_LOCK(bus_datas)) {
+        _DBUS_SET_OOM(error);
+        /* do not "goto out", that would try to unlock */
+        return FALSE;
     }
 
-  bd = ensure_bus_data (connection);
-  if (bd == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      goto out;
+    bd = ensure_bus_data(connection);
+    if (bd == NULL) {
+        _DBUS_SET_OOM(error);
+        goto out;
     }
 
-  if (bd->unique_name != NULL)
-    {
-      _dbus_verbose ("Ignoring attempt to register the same DBusConnection %s with the message bus a second time.\n",
-                     bd->unique_name);
-      /* Success! */
-      retval = TRUE;
-      goto out;
+    if (bd->unique_name != NULL) {
+        _dbus_verbose(
+            "Ignoring attempt to register the same DBusConnection %s with the message bus a second time.\n",
+            bd->unique_name);
+        /* Success! */
+        retval = TRUE;
+        goto out;
     }
-  
-  message = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                          DBUS_PATH_DBUS,
-                                          DBUS_INTERFACE_DBUS,
-                                          "Hello"); 
 
-  if (!message)
-    {
-      _DBUS_SET_OOM (error);
-      goto out;
+    message = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "Hello");
+
+    if (!message) {
+        _DBUS_SET_OOM(error);
+        goto out;
     }
-  
-  reply = dbus_connection_send_with_reply_and_block (connection, message, -1, error);
 
-  if (reply == NULL)
-    goto out;
-  else if (dbus_set_error_from_message (error, reply))
-    goto out;
-  else if (!dbus_message_get_args (reply, error,
-                                   DBUS_TYPE_STRING, &name,
-                                   DBUS_TYPE_INVALID))
-    goto out;
-  
-  bd->unique_name = _dbus_strdup (name);
-  if (bd->unique_name == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      goto out;
+    reply = dbus_connection_send_with_reply_and_block(connection, message, -1, error);
+
+    if (reply == NULL)
+        goto out;
+    else if (dbus_set_error_from_message(error, reply))
+        goto out;
+    else if (!dbus_message_get_args(reply, error, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID))
+        goto out;
+
+    bd->unique_name = _dbus_strdup(name);
+    if (bd->unique_name == NULL) {
+        _DBUS_SET_OOM(error);
+        goto out;
     }
-  
-  retval = TRUE;
-  
- out:
-  _DBUS_UNLOCK (bus_datas);
 
-  if (message)
-    dbus_message_unref (message);
+    retval = TRUE;
 
-  if (reply)
-    dbus_message_unref (reply);
+out:
+    _DBUS_UNLOCK(bus_datas);
 
-  if (!retval)
-    _DBUS_ASSERT_ERROR_IS_SET (error);
+    if (message) dbus_message_unref(message);
 
-  return retval;
+    if (reply) dbus_message_unref(reply);
+
+    if (!retval) _DBUS_ASSERT_ERROR_IS_SET(error);
+
+    return retval;
 }
-
 
 /**
  * Sets the unique name of the connection, as assigned by the message
@@ -762,35 +663,30 @@ dbus_bus_register (DBusConnection *connection,
  * @param unique_name the unique name
  * @returns #FALSE if not enough memory
  */
-dbus_bool_t
-dbus_bus_set_unique_name (DBusConnection *connection,
-                          const char     *unique_name)
-{
-  BusData *bd;
-  dbus_bool_t success = FALSE;
+dbus_bool_t dbus_bus_set_unique_name(DBusConnection* connection, const char* unique_name) {
+    BusData*    bd;
+    dbus_bool_t success = FALSE;
 
-  _dbus_return_val_if_fail (connection != NULL, FALSE);
-  _dbus_return_val_if_fail (unique_name != NULL, FALSE);
+    _dbus_return_val_if_fail(connection != NULL, FALSE);
+    _dbus_return_val_if_fail(unique_name != NULL, FALSE);
 
-  if (!_DBUS_LOCK (bus_datas))
-    {
-      /* do not "goto out", that would try to unlock */
-      return FALSE;
+    if (!_DBUS_LOCK(bus_datas)) {
+        /* do not "goto out", that would try to unlock */
+        return FALSE;
     }
 
-  bd = ensure_bus_data (connection);
-  if (bd == NULL)
-    goto out;
+    bd = ensure_bus_data(connection);
+    if (bd == NULL) goto out;
 
-  _dbus_assert (bd->unique_name == NULL);
-  
-  bd->unique_name = _dbus_strdup (unique_name);
-  success = bd->unique_name != NULL;
+    _dbus_assert(bd->unique_name == NULL);
+
+    bd->unique_name = _dbus_strdup(unique_name);
+    success         = bd->unique_name != NULL;
 
 out:
-  _DBUS_UNLOCK (bus_datas);
-  
-  return success;
+    _DBUS_UNLOCK(bus_datas);
+
+    return success;
 }
 
 /**
@@ -807,35 +703,31 @@ out:
  * dbus_bus_set_unique_name().  You are responsible for calling
  * dbus_bus_set_unique_name() if you register by hand instead of using
  * dbus_bus_register().
- * 
+ *
  * @param connection the connection
  * @returns the unique name or #NULL on error
  */
-const char*
-dbus_bus_get_unique_name (DBusConnection *connection)
-{
-  BusData *bd;
-  const char *unique_name = NULL;
+const char* dbus_bus_get_unique_name(DBusConnection* connection) {
+    BusData*    bd;
+    const char* unique_name = NULL;
 
-  _dbus_return_val_if_fail (connection != NULL, NULL);
+    _dbus_return_val_if_fail(connection != NULL, NULL);
 
-  if (!_DBUS_LOCK (bus_datas))
-    {
-      /* We'd have initialized locks when we gave it its unique name, if it
-       * had one. Don't "goto out", that would try to unlock. */
-      return NULL;
+    if (!_DBUS_LOCK(bus_datas)) {
+        /* We'd have initialized locks when we gave it its unique name, if it
+         * had one. Don't "goto out", that would try to unlock. */
+        return NULL;
     }
 
-  bd = ensure_bus_data (connection);
-  if (bd == NULL)
-    goto out;
+    bd = ensure_bus_data(connection);
+    if (bd == NULL) goto out;
 
-  unique_name = bd->unique_name;
+    unique_name = bd->unique_name;
 
 out:
-  _DBUS_UNLOCK (bus_datas);
+    _DBUS_UNLOCK(bus_datas);
 
-  return unique_name;
+    return unique_name;
 }
 
 /**
@@ -853,77 +745,61 @@ out:
  * a UNIX user, right now that includes all bus connections, but
  * it's very possible to have connections with no associated UID.
  * So check for errors and do something sensible if they happen.
- * 
+ *
  * This function will always return an error on Windows.
- * 
+ *
  * @param connection the connection
  * @param name a name owned by the connection
  * @param error location to store the error
  * @returns the unix user id, or ((unsigned)-1) if error is set
- */ 
-unsigned long
-dbus_bus_get_unix_user (DBusConnection *connection,
-                        const char     *name,
-                        DBusError      *error)
-{
-  DBusMessage *message, *reply;
-  dbus_uint32_t uid;
+ */
+unsigned long dbus_bus_get_unix_user(DBusConnection* connection, const char* name, DBusError* error) {
+    DBusMessage * message, *reply;
+    dbus_uint32_t uid;
 
-  _dbus_return_val_if_fail (connection != NULL, DBUS_UID_UNSET);
-  _dbus_return_val_if_fail (name != NULL, DBUS_UID_UNSET);
-  _dbus_return_val_if_fail (_dbus_check_is_valid_bus_name (name), DBUS_UID_UNSET);
-  _dbus_return_val_if_error_is_set (error, DBUS_UID_UNSET);
-  
-  message = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                          DBUS_PATH_DBUS,
-                                          DBUS_INTERFACE_DBUS,
-                                          "GetConnectionUnixUser");
+    _dbus_return_val_if_fail(connection != NULL, DBUS_UID_UNSET);
+    _dbus_return_val_if_fail(name != NULL, DBUS_UID_UNSET);
+    _dbus_return_val_if_fail(_dbus_check_is_valid_bus_name(name), DBUS_UID_UNSET);
+    _dbus_return_val_if_error_is_set(error, DBUS_UID_UNSET);
 
-  if (message == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      return DBUS_UID_UNSET;
-    }
- 
-  if (!dbus_message_append_args (message,
-				 DBUS_TYPE_STRING, &name,
-				 DBUS_TYPE_INVALID))
-    {
-      dbus_message_unref (message);
-      _DBUS_SET_OOM (error);
-      return DBUS_UID_UNSET;
-    }
-  
-  reply = dbus_connection_send_with_reply_and_block (connection, message, -1,
-                                                     error);
-  
-  dbus_message_unref (message);
-  
-  if (reply == NULL)
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      return DBUS_UID_UNSET;
-    }  
+    message =
+        dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "GetConnectionUnixUser");
 
-  if (dbus_set_error_from_message (error, reply))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return DBUS_UID_UNSET;
-    }
-  
-  if (!dbus_message_get_args (reply, error,
-                              DBUS_TYPE_UINT32, &uid,
-                              DBUS_TYPE_INVALID))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return DBUS_UID_UNSET;
+    if (message == NULL) {
+        _DBUS_SET_OOM(error);
+        return DBUS_UID_UNSET;
     }
 
-  dbus_message_unref (reply);
-  
-  return (unsigned long) uid;
+    if (!dbus_message_append_args(message, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID)) {
+        dbus_message_unref(message);
+        _DBUS_SET_OOM(error);
+        return DBUS_UID_UNSET;
+    }
+
+    reply = dbus_connection_send_with_reply_and_block(connection, message, -1, error);
+
+    dbus_message_unref(message);
+
+    if (reply == NULL) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        return DBUS_UID_UNSET;
+    }
+
+    if (dbus_set_error_from_message(error, reply)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return DBUS_UID_UNSET;
+    }
+
+    if (!dbus_message_get_args(reply, error, DBUS_TYPE_UINT32, &uid, DBUS_TYPE_INVALID)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return DBUS_UID_UNSET;
+    }
+
+    dbus_message_unref(reply);
+
+    return (unsigned long)uid;
 }
 
 /**
@@ -939,71 +815,57 @@ dbus_bus_get_unix_user (DBusConnection *connection,
  * an ID for each address that the bus is listening on; that can
  * be retrieved with dbus_connection_get_server_id(), though it is
  * probably not very useful.
- * 
+ *
  * @param connection the connection
  * @param error location to store the error
  * @returns the bus ID or #NULL if error is set
- */ 
-char*
-dbus_bus_get_id (DBusConnection *connection,
-                 DBusError      *error)
-{
-  DBusMessage *message, *reply;
-  char *id;
-  const char *v_STRING;
+ */
+char* dbus_bus_get_id(DBusConnection* connection, DBusError* error) {
+    DBusMessage *message, *reply;
+    char*        id;
+    const char*  v_STRING;
 
-  _dbus_return_val_if_fail (connection != NULL, NULL);
-  _dbus_return_val_if_error_is_set (error, NULL);
-  
-  message = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                          DBUS_PATH_DBUS,
-                                          DBUS_INTERFACE_DBUS,
-                                          "GetId");
-  
-  if (message == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      return NULL;
-    }
-  
-  reply = dbus_connection_send_with_reply_and_block (connection, message, -1,
-                                                     error);
-  
-  dbus_message_unref (message);
-  
-  if (reply == NULL)
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      return NULL;
-    }  
+    _dbus_return_val_if_fail(connection != NULL, NULL);
+    _dbus_return_val_if_error_is_set(error, NULL);
 
-  if (dbus_set_error_from_message (error, reply))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return NULL;
+    message = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "GetId");
+
+    if (message == NULL) {
+        _DBUS_SET_OOM(error);
+        return NULL;
     }
 
-  v_STRING = NULL;
-  if (!dbus_message_get_args (reply, error,
-                              DBUS_TYPE_STRING, &v_STRING,
-                              DBUS_TYPE_INVALID))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return NULL;
+    reply = dbus_connection_send_with_reply_and_block(connection, message, -1, error);
+
+    dbus_message_unref(message);
+
+    if (reply == NULL) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        return NULL;
     }
 
-  id = _dbus_strdup (v_STRING); /* may be NULL */
-  
-  dbus_message_unref (reply);
+    if (dbus_set_error_from_message(error, reply)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return NULL;
+    }
 
-  if (id == NULL)
-    _DBUS_SET_OOM (error);
+    v_STRING = NULL;
+    if (!dbus_message_get_args(reply, error, DBUS_TYPE_STRING, &v_STRING, DBUS_TYPE_INVALID)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return NULL;
+    }
 
-  /* FIXME it might be nice to cache the ID locally */
-  
-  return id;
+    id = _dbus_strdup(v_STRING); /* may be NULL */
+
+    dbus_message_unref(reply);
+
+    if (id == NULL) _DBUS_SET_OOM(error);
+
+    /* FIXME it might be nice to cache the ID locally */
+
+    return id;
 }
 
 /**
@@ -1029,7 +891,7 @@ dbus_bus_get_id (DBusConnection *connection,
  * disappear and then request the name again.
  *
  * When requesting a name, you can specify several flags.
- * 
+ *
  * #DBUS_NAME_FLAG_ALLOW_REPLACEMENT and #DBUS_NAME_FLAG_DO_NOT_QUEUE
  * are properties stored by the bus for this connection with respect to
  * each requested bus name. These properties are stored even if the
@@ -1058,7 +920,7 @@ dbus_bus_get_id (DBusConnection *connection,
  *
  * This function returns a result code. The possible result codes
  * are as follows.
- * 
+ *
  * #DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER means that the name had no
  * existing owner, and the caller is now the primary owner; or that
  * the name had an owner, and the caller specified
@@ -1068,13 +930,13 @@ dbus_bus_get_id (DBusConnection *connection,
  * #DBUS_REQUEST_NAME_REPLY_IN_QUEUE happens only if the caller does NOT
  * specify #DBUS_NAME_FLAG_DO_NOT_QUEUE and either the current owner
  * did NOT specify #DBUS_NAME_FLAG_ALLOW_REPLACEMENT or the caller did NOT
- * specify #DBUS_NAME_FLAG_REPLACE_EXISTING. In this case the caller ends up 
+ * specify #DBUS_NAME_FLAG_REPLACE_EXISTING. In this case the caller ends up
  * in a queue to own the name after the current owner gives it up.
  *
  * #DBUS_REQUEST_NAME_REPLY_EXISTS happens if the name has an owner
  * already and the caller specifies #DBUS_NAME_FLAG_DO_NOT_QUEUE
- * and either the current owner has NOT specified 
- * #DBUS_NAME_FLAG_ALLOW_REPLACEMENT or the caller did NOT specify 
+ * and either the current owner has NOT specified
+ * #DBUS_NAME_FLAG_ALLOW_REPLACEMENT or the caller did NOT specify
  * #DBUS_NAME_FLAG_REPLACE_EXISTING.
  *
  * #DBUS_REQUEST_NAME_REPLY_ALREADY_OWNER happens if an application
@@ -1107,74 +969,54 @@ dbus_bus_get_id (DBusConnection *connection,
  * @param flags flags
  * @param error location to store the error
  * @returns a result code, -1 if error is set
- */ 
-int
-dbus_bus_request_name (DBusConnection *connection,
-                       const char     *name,
-                       unsigned int    flags,
-                       DBusError      *error)
-{
-  DBusMessage *message, *reply;
-  dbus_uint32_t result;
+ */
+int dbus_bus_request_name(DBusConnection* connection, const char* name, unsigned int flags, DBusError* error) {
+    DBusMessage * message, *reply;
+    dbus_uint32_t result;
 
-  _dbus_return_val_if_fail (connection != NULL, 0);
-  _dbus_return_val_if_fail (name != NULL, 0);
-  _dbus_return_val_if_fail (_dbus_check_is_valid_bus_name (name), 0);
-  _dbus_return_val_if_error_is_set (error, 0);
-  
-  message = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                          DBUS_PATH_DBUS,
-                                          DBUS_INTERFACE_DBUS,
-                                          "RequestName");
+    _dbus_return_val_if_fail(connection != NULL, 0);
+    _dbus_return_val_if_fail(name != NULL, 0);
+    _dbus_return_val_if_fail(_dbus_check_is_valid_bus_name(name), 0);
+    _dbus_return_val_if_error_is_set(error, 0);
 
-  if (message == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      return -1;
-    }
- 
-  if (!dbus_message_append_args (message,
-				 DBUS_TYPE_STRING, &name,
-				 DBUS_TYPE_UINT32, &flags,
-				 DBUS_TYPE_INVALID))
-    {
-      dbus_message_unref (message);
-      _DBUS_SET_OOM (error);
-      return -1;
-    }
-  
-  reply = dbus_connection_send_with_reply_and_block (connection, message, -1,
-                                                     error);
-  
-  dbus_message_unref (message);
-  
-  if (reply == NULL)
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      return -1;
-    }  
+    message = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "RequestName");
 
-  if (dbus_set_error_from_message (error, reply))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return -1;
-    }
-  
-  if (!dbus_message_get_args (reply, error,
-                              DBUS_TYPE_UINT32, &result,
-                              DBUS_TYPE_INVALID))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return -1;
+    if (message == NULL) {
+        _DBUS_SET_OOM(error);
+        return -1;
     }
 
-  dbus_message_unref (reply);
-  
-  return result;
+    if (!dbus_message_append_args(message, DBUS_TYPE_STRING, &name, DBUS_TYPE_UINT32, &flags, DBUS_TYPE_INVALID)) {
+        dbus_message_unref(message);
+        _DBUS_SET_OOM(error);
+        return -1;
+    }
+
+    reply = dbus_connection_send_with_reply_and_block(connection, message, -1, error);
+
+    dbus_message_unref(message);
+
+    if (reply == NULL) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        return -1;
+    }
+
+    if (dbus_set_error_from_message(error, reply)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return -1;
+    }
+
+    if (!dbus_message_get_args(reply, error, DBUS_TYPE_UINT32, &result, DBUS_TYPE_INVALID)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return -1;
+    }
+
+    dbus_message_unref(reply);
+
+    return result;
 }
-
 
 /**
  * Asks the bus to unassign the given name from this connection by
@@ -1188,75 +1030,58 @@ dbus_bus_request_name (DBusConnection *connection,
  * owns the name so you can't release it.
  * #DBUS_RELEASE_NAME_REPLY_NON_EXISTENT
  * which means nobody owned the name.
- * 
+ *
  * @param connection the connection
- * @param name the name to remove 
+ * @param name the name to remove
  * @param error location to store the error
  * @returns a result code, -1 if error is set
- */ 
-int
-dbus_bus_release_name (DBusConnection *connection,
-                       const char     *name,
-                       DBusError      *error)
-{
-  DBusMessage *message, *reply;
-  dbus_uint32_t result;
+ */
+int dbus_bus_release_name(DBusConnection* connection, const char* name, DBusError* error) {
+    DBusMessage * message, *reply;
+    dbus_uint32_t result;
 
-  _dbus_return_val_if_fail (connection != NULL, 0);
-  _dbus_return_val_if_fail (name != NULL, 0);
-  _dbus_return_val_if_fail (_dbus_check_is_valid_bus_name (name), 0);
-  _dbus_return_val_if_error_is_set (error, 0);
+    _dbus_return_val_if_fail(connection != NULL, 0);
+    _dbus_return_val_if_fail(name != NULL, 0);
+    _dbus_return_val_if_fail(_dbus_check_is_valid_bus_name(name), 0);
+    _dbus_return_val_if_error_is_set(error, 0);
 
-  message = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                          DBUS_PATH_DBUS,
-                                          DBUS_INTERFACE_DBUS,
-                                          "ReleaseName");
+    message = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "ReleaseName");
 
-  if (message == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      return -1;
+    if (message == NULL) {
+        _DBUS_SET_OOM(error);
+        return -1;
     }
 
-  if (!dbus_message_append_args (message,
-                                 DBUS_TYPE_STRING, &name,
-                                 DBUS_TYPE_INVALID))
-    {
-      dbus_message_unref (message);
-      _DBUS_SET_OOM (error);
-      return -1;
+    if (!dbus_message_append_args(message, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID)) {
+        dbus_message_unref(message);
+        _DBUS_SET_OOM(error);
+        return -1;
     }
 
-  reply = dbus_connection_send_with_reply_and_block (connection, message, -1,
-                                                     error);
+    reply = dbus_connection_send_with_reply_and_block(connection, message, -1, error);
 
-  dbus_message_unref (message);
+    dbus_message_unref(message);
 
-  if (reply == NULL)
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      return -1;
+    if (reply == NULL) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        return -1;
     }
 
-  if (dbus_set_error_from_message (error, reply))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return -1;
+    if (dbus_set_error_from_message(error, reply)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return -1;
     }
 
-  if (!dbus_message_get_args (reply, error,
-                              DBUS_TYPE_UINT32, &result,
-                              DBUS_TYPE_INVALID))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return -1;
+    if (!dbus_message_get_args(reply, error, DBUS_TYPE_UINT32, &result, DBUS_TYPE_INVALID)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return -1;
     }
 
-  dbus_message_unref (reply);
+    dbus_message_unref(reply);
 
-  return result;
+    return result;
 }
 
 /**
@@ -1270,64 +1095,49 @@ dbus_bus_release_name (DBusConnection *connection,
  * if you want to avoid replacing a current owner,
  * don't specify #DBUS_NAME_FLAG_REPLACE_EXISTING and
  * you will get an error if there's already an owner.
- * 
+ *
  * @param connection the connection
  * @param name the name
  * @param error location to store any errors
  * @returns #TRUE if the name exists, #FALSE if not or on error
  */
-dbus_bool_t
-dbus_bus_name_has_owner (DBusConnection *connection,
-			 const char     *name,
-                         DBusError      *error)
-{
-  DBusMessage *message, *reply;
-  dbus_bool_t exists;
+dbus_bool_t dbus_bus_name_has_owner(DBusConnection* connection, const char* name, DBusError* error) {
+    DBusMessage *message, *reply;
+    dbus_bool_t  exists;
 
-  _dbus_return_val_if_fail (connection != NULL, FALSE);
-  _dbus_return_val_if_fail (name != NULL, FALSE);
-  _dbus_return_val_if_fail (_dbus_check_is_valid_bus_name (name), FALSE);
-  _dbus_return_val_if_error_is_set (error, FALSE);
-  
-  message = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                          DBUS_PATH_DBUS,
-                                          DBUS_INTERFACE_DBUS,
-                                          "NameHasOwner");
-  if (message == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      return FALSE;
-    }
-  
-  if (!dbus_message_append_args (message,
-				 DBUS_TYPE_STRING, &name,
-				 DBUS_TYPE_INVALID))
-    {
-      dbus_message_unref (message);
-      _DBUS_SET_OOM (error);
-      return FALSE;
-    }
-  
-  reply = dbus_connection_send_with_reply_and_block (connection, message, -1, error);
-  dbus_message_unref (message);
+    _dbus_return_val_if_fail(connection != NULL, FALSE);
+    _dbus_return_val_if_fail(name != NULL, FALSE);
+    _dbus_return_val_if_fail(_dbus_check_is_valid_bus_name(name), FALSE);
+    _dbus_return_val_if_error_is_set(error, FALSE);
 
-  if (reply == NULL)
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      return FALSE;
+    message = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "NameHasOwner");
+    if (message == NULL) {
+        _DBUS_SET_OOM(error);
+        return FALSE;
     }
 
-  if (!dbus_message_get_args (reply, error,
-                              DBUS_TYPE_BOOLEAN, &exists,
-                              DBUS_TYPE_INVALID))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return FALSE;
+    if (!dbus_message_append_args(message, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID)) {
+        dbus_message_unref(message);
+        _DBUS_SET_OOM(error);
+        return FALSE;
     }
-  
-  dbus_message_unref (reply);
-  return exists;
+
+    reply = dbus_connection_send_with_reply_and_block(connection, message, -1, error);
+    dbus_message_unref(message);
+
+    if (reply == NULL) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        return FALSE;
+    }
+
+    if (!dbus_message_get_args(reply, error, DBUS_TYPE_BOOLEAN, &exists, DBUS_TYPE_INVALID)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return FALSE;
+    }
+
+    dbus_message_unref(reply);
+    return exists;
 }
 
 /**
@@ -1335,7 +1145,7 @@ dbus_bus_name_has_owner (DBusConnection *connection,
  * The returned result will be one of be one of
  * #DBUS_START_REPLY_SUCCESS or #DBUS_START_REPLY_ALREADY_RUNNING if
  * successful.  Pass #NULL if you don't care about the result.
- * 
+ *
  * The flags parameter is for future expansion, currently you should
  * specify 0.
  *
@@ -1344,7 +1154,7 @@ dbus_bus_name_has_owner (DBusConnection *connection,
  * Method calls start a service to handle them by default
  * unless you call dbus_message_set_auto_start() to disable this
  * behavior.
- * 
+ *
  * @param connection the connection
  * @param name the name we want the new service to request
  * @param flags the flags (should always be 0 for now)
@@ -1352,85 +1162,65 @@ dbus_bus_name_has_owner (DBusConnection *connection,
  * @param error location to store any errors
  * @returns #TRUE if the activation succeeded, #FALSE if not
  */
-dbus_bool_t
-dbus_bus_start_service_by_name (DBusConnection *connection,
-                                const char     *name,
-                                dbus_uint32_t   flags,
-                                dbus_uint32_t  *result,
-                                DBusError      *error)
-{
-  DBusMessage *msg;
-  DBusMessage *reply;
+dbus_bool_t dbus_bus_start_service_by_name(
+    DBusConnection* connection,
+    const char*     name,
+    dbus_uint32_t   flags,
+    dbus_uint32_t*  result,
+    DBusError*      error) {
+    DBusMessage* msg;
+    DBusMessage* reply;
 
-  _dbus_return_val_if_fail (connection != NULL, FALSE);
-  _dbus_return_val_if_fail (_dbus_check_is_valid_bus_name (name), FALSE);
-  
-  msg = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                      DBUS_PATH_DBUS,
-                                      DBUS_INTERFACE_DBUS,
-                                      "StartServiceByName");
+    _dbus_return_val_if_fail(connection != NULL, FALSE);
+    _dbus_return_val_if_fail(_dbus_check_is_valid_bus_name(name), FALSE);
 
-  if (!dbus_message_append_args (msg, DBUS_TYPE_STRING, &name,
-			  	 DBUS_TYPE_UINT32, &flags, DBUS_TYPE_INVALID))
-    {
-      dbus_message_unref (msg);
-      _DBUS_SET_OOM (error);
-      return FALSE;
+    msg = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "StartServiceByName");
+
+    if (!dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_UINT32, &flags, DBUS_TYPE_INVALID)) {
+        dbus_message_unref(msg);
+        _DBUS_SET_OOM(error);
+        return FALSE;
     }
 
-  reply = dbus_connection_send_with_reply_and_block (connection, msg,
-                                                     -1, error);
-  dbus_message_unref (msg);
+    reply = dbus_connection_send_with_reply_and_block(connection, msg, -1, error);
+    dbus_message_unref(msg);
 
-  if (reply == NULL)
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      return FALSE;
+    if (reply == NULL) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        return FALSE;
     }
 
-  if (dbus_set_error_from_message (error, reply))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return FALSE;
+    if (dbus_set_error_from_message(error, reply)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return FALSE;
     }
 
-  if (result != NULL &&
-      !dbus_message_get_args (reply, error, DBUS_TYPE_UINT32,
-	      		      result, DBUS_TYPE_INVALID))
-    {
-      _DBUS_ASSERT_ERROR_IS_SET (error);
-      dbus_message_unref (reply);
-      return FALSE;
+    if (result != NULL && !dbus_message_get_args(reply, error, DBUS_TYPE_UINT32, result, DBUS_TYPE_INVALID)) {
+        _DBUS_ASSERT_ERROR_IS_SET(error);
+        dbus_message_unref(reply);
+        return FALSE;
     }
-  
-  dbus_message_unref (reply);
-  return TRUE;
+
+    dbus_message_unref(reply);
+    return TRUE;
 }
 
-static void
-send_no_return_values (DBusConnection *connection,
-                       DBusMessage    *msg,
-                       DBusError      *error)
-{
-  if (error)
-    {
-      /* Block to check success codepath */
-      DBusMessage *reply;
-      
-      reply = dbus_connection_send_with_reply_and_block (connection, msg,
-                                                         -1, error);
-      
-      if (reply == NULL)
-        _DBUS_ASSERT_ERROR_IS_SET (error);
-      else
-        dbus_message_unref (reply);
-    }
-  else
-    {
-      /* Silently-fail nonblocking codepath */
-      dbus_message_set_no_reply (msg, TRUE);
-      dbus_connection_send (connection, msg, NULL);
+static void send_no_return_values(DBusConnection* connection, DBusMessage* msg, DBusError* error) {
+    if (error) {
+        /* Block to check success codepath */
+        DBusMessage* reply;
+
+        reply = dbus_connection_send_with_reply_and_block(connection, msg, -1, error);
+
+        if (reply == NULL)
+            _DBUS_ASSERT_ERROR_IS_SET(error);
+        else
+            dbus_message_unref(reply);
+    } else {
+        /* Silently-fail nonblocking codepath */
+        dbus_message_set_no_reply(msg, TRUE);
+        dbus_connection_send(connection, msg, NULL);
     }
 }
 
@@ -1458,29 +1248,29 @@ send_no_return_values (DBusConnection *connection,
  * but that would require blocking always to determine
  * the return value.
  *
- * The AddMatch method is fully documented in the D-Bus 
- * specification. For quick reference, the format of the 
- * match rules is discussed here, but the specification 
+ * The AddMatch method is fully documented in the D-Bus
+ * specification. For quick reference, the format of the
+ * match rules is discussed here, but the specification
  * is the canonical version of this information.
  *
- * Rules are specified as a string of comma separated 
- * key/value pairs. An example is 
+ * Rules are specified as a string of comma separated
+ * key/value pairs. An example is
  * "type='signal',sender='org.freedesktop.DBus',
  * interface='org.freedesktop.DBus',member='Foo',
  * path='/bar/foo',destination=':452345.34'"
  *
- * Possible keys you can match on are type, sender, 
+ * Possible keys you can match on are type, sender,
  * interface, member, path, destination and numbered
  * keys to match message args (keys are 'arg0', 'arg1', etc.).
- * Omitting a key from the rule indicates 
+ * Omitting a key from the rule indicates
  * a wildcard match.  For instance omitting
  * the member from a match rule but adding a sender would
  * let all messages from that sender through regardless of
  * the member.
  *
- * Matches are inclusive not exclusive so as long as one 
+ * Matches are inclusive not exclusive so as long as one
  * rule matches the message will get through.  It is important
- * to note this because every time a message is received the 
+ * to note this because every time a message is received the
  * application will be paged into memory to process it.  This
  * can cause performance problems such as draining batteries
  * on embedded platforms.
@@ -1507,7 +1297,7 @@ send_no_return_values (DBusConnection *connection,
  * However, signal messages are required to include the interface
  * so when matching signals usually you should specify the interface
  * in the match rule.
- * 
+ *
  * For security reasons, you can match arguments only up to
  * #DBUS_MAXIMUM_MATCH_RULE_ARG_NUMBER.
  *
@@ -1522,37 +1312,27 @@ send_no_return_values (DBusConnection *connection,
  * @param rule textual form of match rule
  * @param error location to store any errors
  */
-void
-dbus_bus_add_match (DBusConnection *connection,
-                    const char     *rule,
-                    DBusError      *error)
-{
-  DBusMessage *msg;
+void dbus_bus_add_match(DBusConnection* connection, const char* rule, DBusError* error) {
+    DBusMessage* msg;
 
-  _dbus_return_if_fail (rule != NULL);
+    _dbus_return_if_fail(rule != NULL);
 
-  msg = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                      DBUS_PATH_DBUS,
-                                      DBUS_INTERFACE_DBUS,
-                                      "AddMatch");
+    msg = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "AddMatch");
 
-  if (msg == NULL)
-    {
-      _DBUS_SET_OOM (error);
-      return;
+    if (msg == NULL) {
+        _DBUS_SET_OOM(error);
+        return;
     }
 
-  if (!dbus_message_append_args (msg, DBUS_TYPE_STRING, &rule,
-                                 DBUS_TYPE_INVALID))
-    {
-      dbus_message_unref (msg);
-      _DBUS_SET_OOM (error);
-      return;
+    if (!dbus_message_append_args(msg, DBUS_TYPE_STRING, &rule, DBUS_TYPE_INVALID)) {
+        dbus_message_unref(msg);
+        _DBUS_SET_OOM(error);
+        return;
     }
 
-  send_no_return_values (connection, msg, error);
+    send_no_return_values(connection, msg, error);
 
-  dbus_message_unref (msg);
+    dbus_message_unref(msg);
 }
 
 /**
@@ -1563,40 +1343,31 @@ dbus_bus_add_match (DBusConnection *connection,
  * The bus compares match rules semantically, not textually, so
  * whitespace and ordering don't have to be identical to
  * the rule you passed to dbus_bus_add_match().
- * 
+ *
  * If you pass #NULL for the error, this function will not
  * block; otherwise it will. See detailed explanation in
  * docs for dbus_bus_add_match().
- * 
+ *
  * @param connection connection to the message bus
  * @param rule textual form of match rule
  * @param error location to store any errors
  */
-void
-dbus_bus_remove_match (DBusConnection *connection,
-                       const char     *rule,
-                       DBusError      *error)
-{
-  DBusMessage *msg;
+void dbus_bus_remove_match(DBusConnection* connection, const char* rule, DBusError* error) {
+    DBusMessage* msg;
 
-  _dbus_return_if_fail (rule != NULL);
-  
-  msg = dbus_message_new_method_call (DBUS_SERVICE_DBUS,
-                                      DBUS_PATH_DBUS,
-                                      DBUS_INTERFACE_DBUS,
-                                      "RemoveMatch");
+    _dbus_return_if_fail(rule != NULL);
 
-  if (!dbus_message_append_args (msg, DBUS_TYPE_STRING, &rule,
-                                 DBUS_TYPE_INVALID))
-    {
-      dbus_message_unref (msg);
-      _DBUS_SET_OOM (error);
-      return;
+    msg = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "RemoveMatch");
+
+    if (!dbus_message_append_args(msg, DBUS_TYPE_STRING, &rule, DBUS_TYPE_INVALID)) {
+        dbus_message_unref(msg);
+        _DBUS_SET_OOM(error);
+        return;
     }
 
-  send_no_return_values (connection, msg, error);
+    send_no_return_values(connection, msg, error);
 
-  dbus_message_unref (msg);
+    dbus_message_unref(msg);
 }
 
 /** @} */

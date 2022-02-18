@@ -4,7 +4,7 @@
  * Copyright (C) 2002, 2003  Red Hat Inc.
  *
  * Licensed under the Academic Free License version 2.1
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,7 +14,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -30,52 +30,44 @@
  * @defgroup DBusWatchInternals DBusWatch implementation details
  * @ingroup  DBusInternals
  * @brief implementation details for DBusWatch
- * 
+ *
  * @{
  */
 
 /**
  * Implementation of DBusWatch
  */
-struct DBusWatch
-{
-  int refcount;                        /**< Reference count */
-  DBusPollable fd;                     /**< File descriptor. */
-  unsigned int flags;                  /**< Conditions to watch. */
+struct DBusWatch {
+    int          refcount; /**< Reference count */
+    DBusPollable fd;       /**< File descriptor. */
+    unsigned int flags;    /**< Conditions to watch. */
 
-  DBusWatchHandler handler;                    /**< Watch handler. */
-  void *handler_data;                          /**< Watch handler data. */
-  DBusFreeFunction free_handler_data_function; /**< Free the watch handler data. */
-  
-  void *data;                          /**< Application data. */
-  DBusFreeFunction free_data_function; /**< Free the application data. */
-  unsigned int enabled : 1;            /**< Whether it's enabled. */
-  unsigned int oom_last_time : 1;      /**< Whether it was OOM last time. */
+    DBusWatchHandler handler;                    /**< Watch handler. */
+    void*            handler_data;               /**< Watch handler data. */
+    DBusFreeFunction free_handler_data_function; /**< Free the watch handler data. */
+
+    void*            data;               /**< Application data. */
+    DBusFreeFunction free_data_function; /**< Free the application data. */
+    unsigned int     enabled : 1;        /**< Whether it's enabled. */
+    unsigned int     oom_last_time : 1;  /**< Whether it was OOM last time. */
 };
 
-dbus_bool_t
-_dbus_watch_get_enabled (DBusWatch *watch)
-{
-  return watch->enabled;
+dbus_bool_t _dbus_watch_get_enabled(DBusWatch* watch) {
+    return watch->enabled;
 }
 
-dbus_bool_t
-_dbus_watch_get_oom_last_time (DBusWatch *watch)
-{
-  return watch->oom_last_time;
+dbus_bool_t _dbus_watch_get_oom_last_time(DBusWatch* watch) {
+    return watch->oom_last_time;
 }
 
-void
-_dbus_watch_set_oom_last_time (DBusWatch   *watch,
-                               dbus_bool_t  oom)
-{
-  watch->oom_last_time = oom;
+void _dbus_watch_set_oom_last_time(DBusWatch* watch, dbus_bool_t oom) {
+    watch->oom_last_time = oom;
 }
 
 /**
  * Creates a new DBusWatch. Used to add a file descriptor to be polled
  * by a main loop.
- * 
+ *
  * @param fd the file descriptor to be watched.
  * @param flags the conditions to watch for on the descriptor.
  * @param enabled the initial enabled state
@@ -84,34 +76,32 @@ _dbus_watch_set_oom_last_time (DBusWatch   *watch,
  * @param free_data_function function to free the data
  * @returns the new DBusWatch object.
  */
-DBusWatch*
-_dbus_watch_new (DBusPollable      fd,
-                 unsigned int      flags,
-                 dbus_bool_t       enabled,
-                 DBusWatchHandler  handler,
-                 void             *data,
-                 DBusFreeFunction  free_data_function)
-{
-  DBusWatch *watch;
+DBusWatch* _dbus_watch_new(
+    DBusPollable     fd,
+    unsigned int     flags,
+    dbus_bool_t      enabled,
+    DBusWatchHandler handler,
+    void*            data,
+    DBusFreeFunction free_data_function) {
+    DBusWatch* watch;
 
 #define VALID_WATCH_FLAGS (DBUS_WATCH_WRITABLE | DBUS_WATCH_READABLE)
-  
-  _dbus_assert ((flags & VALID_WATCH_FLAGS) == flags);
-  
-  watch = dbus_new0 (DBusWatch, 1);
-  if (watch == NULL)
-    return NULL;
-  
-  watch->refcount = 1;
-  watch->fd = fd;
-  watch->flags = flags;
-  watch->enabled = enabled;
 
-  watch->handler = handler;
-  watch->handler_data = data;
-  watch->free_handler_data_function = free_data_function;
-  
-  return watch;
+    _dbus_assert((flags & VALID_WATCH_FLAGS) == flags);
+
+    watch = dbus_new0(DBusWatch, 1);
+    if (watch == NULL) return NULL;
+
+    watch->refcount = 1;
+    watch->fd       = fd;
+    watch->flags    = flags;
+    watch->enabled  = enabled;
+
+    watch->handler                    = handler;
+    watch->handler_data               = data;
+    watch->free_handler_data_function = free_data_function;
+
+    return watch;
 }
 
 /**
@@ -120,12 +110,10 @@ _dbus_watch_new (DBusPollable      fd,
  * @param watch the watch object.
  * @returns the watch object.
  */
-DBusWatch *
-_dbus_watch_ref (DBusWatch *watch)
-{
-  watch->refcount += 1;
+DBusWatch* _dbus_watch_ref(DBusWatch* watch) {
+    watch->refcount += 1;
 
-  return watch;
+    return watch;
 }
 
 /**
@@ -134,24 +122,19 @@ _dbus_watch_ref (DBusWatch *watch)
  *
  * @param watch the watch object.
  */
-void
-_dbus_watch_unref (DBusWatch *watch)
-{
-  _dbus_assert (watch != NULL);
-  _dbus_assert (watch->refcount > 0);
+void _dbus_watch_unref(DBusWatch* watch) {
+    _dbus_assert(watch != NULL);
+    _dbus_assert(watch->refcount > 0);
 
-  watch->refcount -= 1;
-  if (watch->refcount == 0)
-    {
-      if (_dbus_pollable_is_valid (watch->fd))
-        _dbus_warn ("this watch should have been invalidated");
+    watch->refcount -= 1;
+    if (watch->refcount == 0) {
+        if (_dbus_pollable_is_valid(watch->fd)) _dbus_warn("this watch should have been invalidated");
 
-      dbus_watch_set_data (watch, NULL, NULL); /* call free_data_function */
+        dbus_watch_set_data(watch, NULL, NULL); /* call free_data_function */
 
-      if (watch->free_handler_data_function)
-	(* watch->free_handler_data_function) (watch->handler_data);
-      
-      dbus_free (watch);
+        if (watch->free_handler_data_function) (*watch->free_handler_data_function)(watch->handler_data);
+
+        dbus_free(watch);
     }
 }
 
@@ -165,11 +148,9 @@ _dbus_watch_unref (DBusWatch *watch)
  *
  * @param watch the watch object.
  */
-void
-_dbus_watch_invalidate (DBusWatch *watch)
-{
-  _dbus_pollable_invalidate (&watch->fd);
-  watch->flags = 0;
+void _dbus_watch_invalidate(DBusWatch* watch) {
+    _dbus_pollable_invalidate(&watch->fd);
+    watch->flags = 0;
 }
 
 /**
@@ -181,16 +162,10 @@ _dbus_watch_invalidate (DBusWatch *watch)
  * @param watch the watch object.
  * @param condition address of the condition to sanitize.
  */
-void
-_dbus_watch_sanitize_condition (DBusWatch    *watch,
-                                unsigned int *condition)
-{
-  if (!(watch->flags & DBUS_WATCH_READABLE))
-    *condition &= ~DBUS_WATCH_READABLE;
-  if (!(watch->flags & DBUS_WATCH_WRITABLE))
-    *condition &= ~DBUS_WATCH_WRITABLE;
+void _dbus_watch_sanitize_condition(DBusWatch* watch, unsigned int* condition) {
+    if (!(watch->flags & DBUS_WATCH_READABLE)) *condition &= ~DBUS_WATCH_READABLE;
+    if (!(watch->flags & DBUS_WATCH_WRITABLE)) *condition &= ~DBUS_WATCH_WRITABLE;
 }
-
 
 /**
  * @typedef DBusWatchList
@@ -211,15 +186,14 @@ _dbus_watch_sanitize_condition (DBusWatch    *watch,
  * are private.
  *
  */
-struct DBusWatchList
-{
-  DBusList *watches;           /**< Watch objects. */
+struct DBusWatchList {
+    DBusList* watches; /**< Watch objects. */
 
-  DBusAddWatchFunction add_watch_function;    /**< Callback for adding a watch. */
-  DBusRemoveWatchFunction remove_watch_function; /**< Callback for removing a watch. */
-  DBusWatchToggledFunction watch_toggled_function; /**< Callback on toggling enablement */
-  void *watch_data;                           /**< Data for watch callbacks */
-  DBusFreeFunction watch_free_data_function;  /**< Free function for watch callback data */
+    DBusAddWatchFunction     add_watch_function;       /**< Callback for adding a watch. */
+    DBusRemoveWatchFunction  remove_watch_function;    /**< Callback for removing a watch. */
+    DBusWatchToggledFunction watch_toggled_function;   /**< Callback on toggling enablement */
+    void*                    watch_data;               /**< Data for watch callbacks */
+    DBusFreeFunction         watch_free_data_function; /**< Free function for watch callback data */
 };
 
 /**
@@ -228,16 +202,13 @@ struct DBusWatchList
  *
  * @returns the new watch list, or #NULL on failure.
  */
-DBusWatchList*
-_dbus_watch_list_new (void)
-{
-  DBusWatchList *watch_list;
+DBusWatchList* _dbus_watch_list_new(void) {
+    DBusWatchList* watch_list;
 
-  watch_list = dbus_new0 (DBusWatchList, 1);
-  if (watch_list == NULL)
-    return NULL;
+    watch_list = dbus_new0(DBusWatchList, 1);
+    if (watch_list == NULL) return NULL;
 
-  return watch_list;
+    return watch_list;
 }
 
 /**
@@ -245,36 +216,28 @@ _dbus_watch_list_new (void)
  *
  * @param watch_list the watch list.
  */
-void
-_dbus_watch_list_free (DBusWatchList *watch_list)
-{
-  /* free watch_data and removes watches as a side effect */
-  _dbus_watch_list_set_functions (watch_list,
-                                  NULL, NULL, NULL, NULL, NULL);
-  _dbus_list_foreach (&watch_list->watches,
-                      (DBusForeachFunction) _dbus_watch_unref,
-                      NULL);
-  _dbus_list_clear (&watch_list->watches);
+void _dbus_watch_list_free(DBusWatchList* watch_list) {
+    /* free watch_data and removes watches as a side effect */
+    _dbus_watch_list_set_functions(watch_list, NULL, NULL, NULL, NULL, NULL);
+    _dbus_list_foreach(&watch_list->watches, (DBusForeachFunction)_dbus_watch_unref, NULL);
+    _dbus_list_clear(&watch_list->watches);
 
-  dbus_free (watch_list);
+    dbus_free(watch_list);
 }
 
 #ifdef DBUS_ENABLE_VERBOSE_MODE
-static const char*
-watch_flags_to_string (int flags)
-{
-  const char *watch_type;
+static const char* watch_flags_to_string(int flags) {
+    const char* watch_type;
 
-  if ((flags & DBUS_WATCH_READABLE) &&
-      (flags & DBUS_WATCH_WRITABLE))
-    watch_type = "readwrite";
-  else if (flags & DBUS_WATCH_READABLE)
-    watch_type = "read";
-  else if (flags & DBUS_WATCH_WRITABLE)
-    watch_type = "write";
-  else
-    watch_type = "not read or write";
-  return watch_type;
+    if ((flags & DBUS_WATCH_READABLE) && (flags & DBUS_WATCH_WRITABLE))
+        watch_type = "readwrite";
+    else if (flags & DBUS_WATCH_READABLE)
+        watch_type = "read";
+    else if (flags & DBUS_WATCH_WRITABLE)
+        watch_type = "write";
+    else
+        watch_type = "not read or write";
+    return watch_type;
 }
 #endif /* DBUS_ENABLE_VERBOSE_MODE */
 
@@ -292,82 +255,75 @@ watch_flags_to_string (int flags)
  * @returns #FALSE if not enough memory
  *
  */
-dbus_bool_t
-_dbus_watch_list_set_functions (DBusWatchList           *watch_list,
-                                DBusAddWatchFunction     add_function,
-                                DBusRemoveWatchFunction  remove_function,
-                                DBusWatchToggledFunction toggled_function,
-                                void                    *data,
-                                DBusFreeFunction         free_data_function)
-{
-  /* Add watches with the new watch function, failing on OOM */
-  if (add_function != NULL)
-    {
-      DBusList *link;
-      
-      link = _dbus_list_get_first_link (&watch_list->watches);
-      while (link != NULL)
-        {
-          DBusList *next = _dbus_list_get_next_link (&watch_list->watches,
-                                                     link);
-#ifdef DBUS_ENABLE_VERBOSE_MODE
-          DBusWatch *watch = link->data;
+dbus_bool_t _dbus_watch_list_set_functions(
+    DBusWatchList*           watch_list,
+    DBusAddWatchFunction     add_function,
+    DBusRemoveWatchFunction  remove_function,
+    DBusWatchToggledFunction toggled_function,
+    void*                    data,
+    DBusFreeFunction         free_data_function) {
+    /* Add watches with the new watch function, failing on OOM */
+    if (add_function != NULL) {
+        DBusList* link;
 
-          _dbus_verbose ("Adding a %s watch on fd %" DBUS_POLLABLE_FORMAT " using newly-set add watch function\n",
-                         watch_flags_to_string (dbus_watch_get_flags (link->data)),
-                         _dbus_pollable_printable (watch->fd));
-#endif
-          
-          if (!(* add_function) (link->data, data))
-            {
-              /* remove it all again and return FALSE */
-              DBusList *link2;
-              
-              link2 = _dbus_list_get_first_link (&watch_list->watches);
-              while (link2 != link)
-                {
-                  DBusList *next2 = _dbus_list_get_next_link (&watch_list->watches,
-                                                              link2);
+        link = _dbus_list_get_first_link(&watch_list->watches);
+        while (link != NULL) {
+            DBusList* next = _dbus_list_get_next_link(&watch_list->watches, link);
 #ifdef DBUS_ENABLE_VERBOSE_MODE
-                  DBusWatch *watch2 = link2->data;
-                  
-                  _dbus_verbose ("Removing watch on fd %" DBUS_POLLABLE_FORMAT " using newly-set remove function because initial add failed\n",
-                                 _dbus_pollable_printable (watch2->fd));
+            DBusWatch* watch = link->data;
+
+            _dbus_verbose(
+                "Adding a %s watch on fd %" DBUS_POLLABLE_FORMAT " using newly-set add watch function\n",
+                watch_flags_to_string(dbus_watch_get_flags(link->data)),
+                _dbus_pollable_printable(watch->fd));
 #endif
-                  
-                  (* remove_function) (link2->data, data);
-                  
-                  link2 = next2;
+
+            if (!(*add_function)(link->data, data)) {
+                /* remove it all again and return FALSE */
+                DBusList* link2;
+
+                link2 = _dbus_list_get_first_link(&watch_list->watches);
+                while (link2 != link) {
+                    DBusList* next2 = _dbus_list_get_next_link(&watch_list->watches, link2);
+#ifdef DBUS_ENABLE_VERBOSE_MODE
+                    DBusWatch* watch2 = link2->data;
+
+                    _dbus_verbose(
+                        "Removing watch on fd %" DBUS_POLLABLE_FORMAT
+                        " using newly-set remove function because initial add failed\n",
+                        _dbus_pollable_printable(watch2->fd));
+#endif
+
+                    (*remove_function)(link2->data, data);
+
+                    link2 = next2;
                 }
 
-              return FALSE;
+                return FALSE;
             }
-      
-          link = next;
+
+            link = next;
         }
     }
-  
-  /* Remove all current watches from previous watch handlers */
 
-  if (watch_list->remove_watch_function != NULL)
-    {
-      _dbus_verbose ("Removing all pre-existing watches\n");
-      
-      _dbus_list_foreach (&watch_list->watches,
-                          (DBusForeachFunction) watch_list->remove_watch_function,
-                          watch_list->watch_data);
+    /* Remove all current watches from previous watch handlers */
+
+    if (watch_list->remove_watch_function != NULL) {
+        _dbus_verbose("Removing all pre-existing watches\n");
+
+        _dbus_list_foreach(
+            &watch_list->watches, (DBusForeachFunction)watch_list->remove_watch_function, watch_list->watch_data);
     }
 
-  if (watch_list->watch_free_data_function != NULL)
-    (* watch_list->watch_free_data_function) (watch_list->watch_data);
-  
-  watch_list->add_watch_function = add_function;
-  watch_list->remove_watch_function = remove_function;
-  watch_list->watch_toggled_function = toggled_function;
-  watch_list->watch_data = data;
-  watch_list->watch_free_data_function = free_data_function;
+    if (watch_list->watch_free_data_function != NULL) (*watch_list->watch_free_data_function)(watch_list->watch_data);
 
-  return TRUE;
+    watch_list->add_watch_function       = add_function;
+    watch_list->remove_watch_function    = remove_function;
+    watch_list->watch_toggled_function   = toggled_function;
+    watch_list->watch_data               = data;
+    watch_list->watch_free_data_function = free_data_function;
+
+    return TRUE;
 }
 
 /**
@@ -378,30 +334,22 @@ _dbus_watch_list_set_functions (DBusWatchList           *watch_list,
  * @param watch the watch to add.
  * @returns #TRUE on success, #FALSE if no memory.
  */
-dbus_bool_t
-_dbus_watch_list_add_watch (DBusWatchList *watch_list,
-                            DBusWatch     *watch)
-{
-  if (!_dbus_list_append (&watch_list->watches, watch))
-    return FALSE;
-  
-  _dbus_watch_ref (watch);
+dbus_bool_t _dbus_watch_list_add_watch(DBusWatchList* watch_list, DBusWatch* watch) {
+    if (!_dbus_list_append(&watch_list->watches, watch)) return FALSE;
 
-  if (watch_list->add_watch_function != NULL)
-    {
-      _dbus_verbose ("Adding watch on fd %" DBUS_POLLABLE_FORMAT "\n",
-                     _dbus_pollable_printable (watch->fd));
-      
-      if (!(* watch_list->add_watch_function) (watch,
-                                               watch_list->watch_data))
-        {
-          _dbus_list_remove_last (&watch_list->watches, watch);
-          _dbus_watch_unref (watch);
-          return FALSE;
+    _dbus_watch_ref(watch);
+
+    if (watch_list->add_watch_function != NULL) {
+        _dbus_verbose("Adding watch on fd %" DBUS_POLLABLE_FORMAT "\n", _dbus_pollable_printable(watch->fd));
+
+        if (!(*watch_list->add_watch_function)(watch, watch_list->watch_data)) {
+            _dbus_list_remove_last(&watch_list->watches, watch);
+            _dbus_watch_unref(watch);
+            return FALSE;
         }
     }
-  
-  return TRUE;
+
+    return TRUE;
 }
 
 /**
@@ -411,23 +359,16 @@ _dbus_watch_list_add_watch (DBusWatchList *watch_list,
  * @param watch_list the watch list.
  * @param watch the watch to remove.
  */
-void
-_dbus_watch_list_remove_watch  (DBusWatchList *watch_list,
-                                DBusWatch     *watch)
-{
-  if (!_dbus_list_remove (&watch_list->watches, watch))
-    _dbus_assert_not_reached ("Nonexistent watch was removed");
-  
-  if (watch_list->remove_watch_function != NULL)
-    {
-      _dbus_verbose ("Removing watch on fd %" DBUS_POLLABLE_FORMAT "\n",
-                     _dbus_pollable_printable (watch->fd));
-      
-      (* watch_list->remove_watch_function) (watch,
-                                             watch_list->watch_data);
+void _dbus_watch_list_remove_watch(DBusWatchList* watch_list, DBusWatch* watch) {
+    if (!_dbus_list_remove(&watch_list->watches, watch)) _dbus_assert_not_reached("Nonexistent watch was removed");
+
+    if (watch_list->remove_watch_function != NULL) {
+        _dbus_verbose("Removing watch on fd %" DBUS_POLLABLE_FORMAT "\n", _dbus_pollable_printable(watch->fd));
+
+        (*watch_list->remove_watch_function)(watch, watch_list->watch_data);
     }
-  
-  _dbus_watch_unref (watch);
+
+    _dbus_watch_unref(watch);
 }
 
 /**
@@ -438,27 +379,21 @@ _dbus_watch_list_remove_watch  (DBusWatchList *watch_list,
  * @param watch the watch to toggle.
  * @param enabled #TRUE to enable
  */
-void
-_dbus_watch_list_toggle_watch (DBusWatchList           *watch_list,
-                               DBusWatch               *watch,
-                               dbus_bool_t              enabled)
-{
-  enabled = !!enabled;
-  
-  if (enabled == watch->enabled)
-    return;
+void _dbus_watch_list_toggle_watch(DBusWatchList* watch_list, DBusWatch* watch, dbus_bool_t enabled) {
+    enabled = !!enabled;
 
-  watch->enabled = enabled;
-  
-  if (watch_list->watch_toggled_function != NULL)
-    {
-      _dbus_verbose ("Toggling watch %p on fd %" DBUS_POLLABLE_FORMAT " to %d\n",
-                     watch,
-                     _dbus_pollable_printable (watch->fd),
-                     watch->enabled);
-      
-      (* watch_list->watch_toggled_function) (watch,
-                                              watch_list->watch_data);
+    if (enabled == watch->enabled) return;
+
+    watch->enabled = enabled;
+
+    if (watch_list->watch_toggled_function != NULL) {
+        _dbus_verbose(
+            "Toggling watch %p on fd %" DBUS_POLLABLE_FORMAT " to %d\n",
+            watch,
+            _dbus_pollable_printable(watch->fd),
+            watch->enabled);
+
+        (*watch_list->watch_toggled_function)(watch, watch_list->watch_data);
     }
 }
 
@@ -469,17 +404,12 @@ _dbus_watch_list_toggle_watch (DBusWatchList           *watch_list,
  * @param watch_list the watch list.
  * @param enabled #TRUE to enable
  */
-void
-_dbus_watch_list_toggle_all_watches (DBusWatchList           *watch_list,
-                                     dbus_bool_t              enabled)
-{
-  DBusList *link;
+void _dbus_watch_list_toggle_all_watches(DBusWatchList* watch_list, dbus_bool_t enabled) {
+    DBusList* link;
 
-  for (link = _dbus_list_get_first_link (&watch_list->watches);
-       link != NULL;
-       link = _dbus_list_get_next_link (&watch_list->watches, link))
-    {
-      _dbus_watch_list_toggle_watch (watch_list, link->data, enabled);
+    for (link = _dbus_list_get_first_link(&watch_list->watches); link != NULL;
+         link = _dbus_list_get_next_link(&watch_list->watches, link)) {
+        _dbus_watch_list_toggle_watch(watch_list, link->data, enabled);
     }
 }
 
@@ -495,18 +425,16 @@ _dbus_watch_list_toggle_all_watches (DBusWatchList           *watch_list,
  * @param data the data
  * @param free_data_function free data with this
  */
-void
-_dbus_watch_set_handler (DBusWatch        *watch,
-                         DBusWatchHandler  handler,
-                         void             *data,
-                         DBusFreeFunction  free_data_function)
-{
-  if (watch->free_handler_data_function)
-    (* watch->free_handler_data_function) (watch->handler_data);
+void _dbus_watch_set_handler(
+    DBusWatch*       watch,
+    DBusWatchHandler handler,
+    void*            data,
+    DBusFreeFunction free_data_function) {
+    if (watch->free_handler_data_function) (*watch->free_handler_data_function)(watch->handler_data);
 
-  watch->handler = handler;
-  watch->handler_data = data;
-  watch->free_handler_data_function = free_data_function;
+    watch->handler                    = handler;
+    watch->handler_data               = data;
+    watch->free_handler_data_function = free_data_function;
 }
 
 /** @} */
@@ -522,7 +450,7 @@ _dbus_watch_set_handler (DBusWatch        *watch,
  *
  * Use dbus_connection_set_watch_functions() or dbus_server_set_watch_functions()
  * to be notified when libdbus needs to add or remove watches.
- * 
+ *
  * @{
  */
 
@@ -536,16 +464,14 @@ _dbus_watch_set_handler (DBusWatch        *watch,
 
 /**
  * Deprecated former name of dbus_watch_get_unix_fd().
- * 
+ *
  * @param watch the DBusWatch object.
  * @returns the file descriptor to watch.
  */
-int
-dbus_watch_get_fd (DBusWatch *watch)
-{
-  _dbus_return_val_if_fail (watch != NULL, -1);
+int dbus_watch_get_fd(DBusWatch* watch) {
+    _dbus_return_val_if_fail(watch != NULL, -1);
 
-  return dbus_watch_get_unix_fd(watch);
+    return dbus_watch_get_unix_fd(watch);
 }
 
 /**
@@ -557,24 +483,22 @@ dbus_watch_get_fd (DBusWatch *watch)
  *
  * Always returns -1 on Windows. On Windows you use
  * dbus_watch_get_socket() to get a Winsock socket to watch.
- * 
+ *
  * @param watch the DBusWatch object.
  * @returns the file descriptor to watch.
  */
-int
-dbus_watch_get_unix_fd (DBusWatch *watch)
-{
-  _dbus_return_val_if_fail (watch != NULL, -1);
+int dbus_watch_get_unix_fd(DBusWatch* watch) {
+    _dbus_return_val_if_fail(watch != NULL, -1);
 
-  /* FIXME remove #ifdef and do this on a lower level
-   * (watch should have set_socket and set_unix_fd and track
-   * which it has, and the transport should provide the
-   * appropriate watch type)
-   */
+    /* FIXME remove #ifdef and do this on a lower level
+     * (watch should have set_socket and set_unix_fd and track
+     * which it has, and the transport should provide the
+     * appropriate watch type)
+     */
 #ifdef DBUS_UNIX
-  return watch->fd;
+    return watch->fd;
 #else
-  return dbus_watch_get_socket( watch );
+    return dbus_watch_get_socket(watch);
 #endif
 }
 
@@ -586,51 +510,45 @@ dbus_watch_get_unix_fd (DBusWatch *watch)
  * On Windows, dbus_watch_get_unix_fd() returns -1 but this function
  * returns a Winsock socket (assuming the transport is socket-based,
  * as it always is for now).
- * 
+ *
  * @param watch the DBusWatch object.
  * @returns the socket to watch.
  */
-int
-dbus_watch_get_socket (DBusWatch *watch)
-{
-  _dbus_return_val_if_fail (watch != NULL, -1);
+int dbus_watch_get_socket(DBusWatch* watch) {
+    _dbus_return_val_if_fail(watch != NULL, -1);
 
 #ifdef DBUS_UNIX
-  return watch->fd;
+    return watch->fd;
 #else
-  return _dbus_socket_get_int (watch->fd);
+    return _dbus_socket_get_int(watch->fd);
 #endif
 }
 
-DBusSocket
-_dbus_watch_get_socket (DBusWatch *watch)
-{
-  DBusSocket s;
+DBusSocket _dbus_watch_get_socket(DBusWatch* watch) {
+    DBusSocket s;
 
-  _dbus_assert (watch != NULL);
+    _dbus_assert(watch != NULL);
 
 #ifdef DBUS_UNIX
-  s.fd = watch->fd;
+    s.fd = watch->fd;
 #else
-  s = watch->fd;
+    s = watch->fd;
 #endif
 
-  return s;
+    return s;
 }
 
-DBusPollable
-_dbus_watch_get_pollable (DBusWatch *watch)
-{
-  _dbus_assert (watch != NULL);
+DBusPollable _dbus_watch_get_pollable(DBusWatch* watch) {
+    _dbus_assert(watch != NULL);
 
-  return watch->fd;
+    return watch->fd;
 }
 
 /**
  * Gets flags from DBusWatchFlags indicating
  * what conditions should be monitored on the
  * file descriptor.
- * 
+ *
  * The flags returned will only contain DBUS_WATCH_READABLE
  * and DBUS_WATCH_WRITABLE, never DBUS_WATCH_HANGUP or
  * DBUS_WATCH_ERROR; all watches implicitly include a watch
@@ -639,13 +557,11 @@ _dbus_watch_get_pollable (DBusWatch *watch)
  * @param watch the DBusWatch object.
  * @returns the conditions to watch.
  */
-unsigned int
-dbus_watch_get_flags (DBusWatch *watch)
-{
-  _dbus_return_val_if_fail (watch != NULL, 0);
-  _dbus_assert ((watch->flags & VALID_WATCH_FLAGS) == watch->flags);
+unsigned int dbus_watch_get_flags(DBusWatch* watch) {
+    _dbus_return_val_if_fail(watch != NULL, 0);
+    _dbus_assert((watch->flags & VALID_WATCH_FLAGS) == watch->flags);
 
-  return watch->flags;
+    return watch->flags;
 }
 
 /**
@@ -655,12 +571,10 @@ dbus_watch_get_flags (DBusWatch *watch)
  * @param watch the DBusWatch object.
  * @returns previously-set data.
  */
-void*
-dbus_watch_get_data (DBusWatch *watch)
-{
-  _dbus_return_val_if_fail (watch != NULL, NULL);
+void* dbus_watch_get_data(DBusWatch* watch) {
+    _dbus_return_val_if_fail(watch != NULL, NULL);
 
-  return watch->data;
+    return watch->data;
 }
 
 /**
@@ -674,22 +588,21 @@ dbus_watch_get_data (DBusWatch *watch)
  * @param data the data.
  * @param free_data_function function to be called to free the data.
  */
-void
-dbus_watch_set_data (DBusWatch        *watch,
-                     void             *data,
-                     DBusFreeFunction  free_data_function)
-{
-  _dbus_return_if_fail (watch != NULL);
+void dbus_watch_set_data(DBusWatch* watch, void* data, DBusFreeFunction free_data_function) {
+    _dbus_return_if_fail(watch != NULL);
 
-  _dbus_verbose ("Setting watch fd %" DBUS_POLLABLE_FORMAT " data to data = %p function = %p from data = %p function = %p\n",
-                 _dbus_pollable_printable (watch->fd),
-                 data, free_data_function, watch->data, watch->free_data_function);
-  
-  if (watch->free_data_function != NULL)
-    (* watch->free_data_function) (watch->data);
-  
-  watch->data = data;
-  watch->free_data_function = free_data_function;
+    _dbus_verbose(
+        "Setting watch fd %" DBUS_POLLABLE_FORMAT " data to data = %p function = %p from data = %p function = %p\n",
+        _dbus_pollable_printable(watch->fd),
+        data,
+        free_data_function,
+        watch->data,
+        watch->free_data_function);
+
+    if (watch->free_data_function != NULL) (*watch->free_data_function)(watch->data);
+
+    watch->data               = data;
+    watch->free_data_function = free_data_function;
 }
 
 /**
@@ -699,19 +612,16 @@ dbus_watch_set_data (DBusWatch        *watch,
  * @param watch the DBusWatch object
  * @returns #TRUE if the watch is enabled
  */
-dbus_bool_t
-dbus_watch_get_enabled (DBusWatch *watch)
-{
-  _dbus_return_val_if_fail (watch != NULL, FALSE);
+dbus_bool_t dbus_watch_get_enabled(DBusWatch* watch) {
+    _dbus_return_val_if_fail(watch != NULL, FALSE);
 
-  return watch->enabled;
+    return watch->enabled;
 }
-
 
 /**
  * Called to notify the D-Bus library when a previously-added watch is
  * ready for reading or writing, or has an exception such as a hangup.
- * 
+ *
  * If this function returns #FALSE, then the file descriptor may still
  * be ready for reading or writing, but more memory is needed in order
  * to do the reading or writing. If you ignore the #FALSE return, your
@@ -722,42 +632,35 @@ dbus_watch_get_enabled (DBusWatch *watch)
  * dbus_watch_handle() cannot be called during the
  * DBusAddWatchFunction, as the connection will not be ready to handle
  * that watch yet.
- * 
+ *
  * It is not allowed to reference a DBusWatch after it has been passed
  * to remove_function.
  *
  * @param watch the DBusWatch object.
  * @param flags the poll condition using #DBusWatchFlags values
- * @returns #FALSE if there wasn't enough memory 
+ * @returns #FALSE if there wasn't enough memory
  */
-dbus_bool_t
-dbus_watch_handle (DBusWatch    *watch,
-                   unsigned int  flags)
-{
-  _dbus_return_val_if_fail (watch != NULL, FALSE);
+dbus_bool_t dbus_watch_handle(DBusWatch* watch, unsigned int flags) {
+    _dbus_return_val_if_fail(watch != NULL, FALSE);
 
 #ifndef DBUS_DISABLE_CHECKS
-  if (!_dbus_pollable_is_valid (watch->fd) || watch->flags == 0)
-    {
-      _dbus_warn_check_failed ("Watch is invalid, it should have been removed");
-      return TRUE;
+    if (!_dbus_pollable_is_valid(watch->fd) || watch->flags == 0) {
+        _dbus_warn_check_failed("Watch is invalid, it should have been removed");
+        return TRUE;
     }
 #endif
-    
-  _dbus_return_val_if_fail (_dbus_pollable_is_valid (watch->fd) /* fails if watch was removed */, TRUE);
-  
-  _dbus_watch_sanitize_condition (watch, &flags);
 
-  if (flags == 0)
-    {
-      _dbus_verbose ("After sanitization, watch flags on fd %" DBUS_POLLABLE_FORMAT " were 0\n",
-                     _dbus_pollable_printable (watch->fd));
-      return TRUE;
-    }
-  else
-    return (* watch->handler) (watch, flags,
-                               watch->handler_data);
+    _dbus_return_val_if_fail(_dbus_pollable_is_valid(watch->fd) /* fails if watch was removed */, TRUE);
+
+    _dbus_watch_sanitize_condition(watch, &flags);
+
+    if (flags == 0) {
+        _dbus_verbose(
+            "After sanitization, watch flags on fd %" DBUS_POLLABLE_FORMAT " were 0\n",
+            _dbus_pollable_printable(watch->fd));
+        return TRUE;
+    } else
+        return (*watch->handler)(watch, flags, watch->handler_data);
 }
-
 
 /** @} */
